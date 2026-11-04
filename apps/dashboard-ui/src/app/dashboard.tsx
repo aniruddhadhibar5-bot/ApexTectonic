@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import OfflineComms from "./offline-comms";
 import TrainingLab from "./training-lab";
+import AiVoiceRoom from "./ai-voice-room";
 
 type Locale = "en-US" | "ja-JP";
 type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
@@ -27,29 +28,6 @@ type CatalogState = {
   feedGeneratedAt: number | null;
 };
 type ResearchQuestion = "preparedness" | "prediction" | "catalog" | "warning" | "data";
-type VoiceResult = { transcript: string };
-type VoiceRecognitionResult = ArrayLike<VoiceResult> & { isFinal: boolean };
-type VoiceRecognitionEvent = Event & { resultIndex: number; results: ArrayLike<VoiceRecognitionResult> };
-type VoiceRecognitionErrorEvent = Event & { error: string };
-interface BrowserSpeechRecognition extends EventTarget {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: VoiceRecognitionEvent) => void) | null;
-  onerror: ((event: VoiceRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => BrowserSpeechRecognition;
-    webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
-  }
-}
 
 const sourceReferences = [
   { id: "jma-eew", url: "https://www.jma.go.jp/jma/en/Activities/eew1.html" },
@@ -360,18 +338,6 @@ const copy = {
     },
     assistantFallback:
       "I can answer only the listed, source-backed topics in this offline guide. Try one of the suggested questions below.",
-    voiceInput: "Ask by voice",
-    voiceListening: "Listening… tap to stop",
-    voiceSpeak: "Speak answer",
-    voiceStop: "Stop speaking",
-    voicePrivacy:
-      "Voice input uses your browser’s speech-recognition service; support, network use, and audio processing vary by browser. Hyperion does not store audio. Use typed input if voice is unavailable or offline.",
-    voiceUnsupported: "Voice recognition is not available in this browser. You can still type a question.",
-    voiceDenied: "Microphone or speech permission was denied. Check browser permissions, or type your question instead.",
-    voiceNoSpeech: "No speech was detected. Try again or type your question.",
-    voiceError: "Speech recognition failed. Check your microphone and network, or type your question.",
-    voiceOutputUnsupported: "Spoken answers are not available in this browser.",
-    voiceOutputError: "The browser could not play the spoken answer.",
     assistantAnswers: {
       preparedness:
         "If shaking starts, Drop, Cover, and Hold On; protect your head and stay away from glass. Do not rush outside or use elevators while shaking. If you are near the coast and experience strong or long-lasting shaking, move to higher ground/inland immediately and follow JMA and local-authority tsunami information—do not wait for this app. For an immediate fire or medical emergency in Japan, call 119 from a working phone. Shelter and evacuation routes depend on your municipality. This guide is offline reference material, not emergency dispatch.",
@@ -654,18 +620,6 @@ const copy = {
     },
     assistantFallback:
       "このオフラインガイドでは、出典で確認した項目のみ回答できます。下の候補から質問を選択してください。",
-    voiceInput: "音声で質問",
-    voiceListening: "聞き取り中…停止するには再度タップ",
-    voiceSpeak: "回答を音声で再生",
-    voiceStop: "音声を停止",
-    voicePrivacy:
-      "音声入力はブラウザーの音声認識機能を使います。対応状況、通信、音声処理はブラウザーにより異なります。Hyperionは音声を保存しません。音声が使えない場合やオフライン時は文字で入力してください。",
-    voiceUnsupported: "このブラウザーでは音声認識を利用できません。質問を文字で入力できます。",
-    voiceDenied: "マイクまたは音声認識の許可がありません。ブラウザーの権限を確認するか、文字で質問してください。",
-    voiceNoSpeech: "音声を検出できませんでした。再試行するか、文字で質問してください。",
-    voiceError: "音声認識に失敗しました。マイクとネットワークを確認するか、文字で質問してください。",
-    voiceOutputUnsupported: "このブラウザーでは回答の読み上げを利用できません。",
-    voiceOutputError: "ブラウザーで回答を読み上げられませんでした。",
     assistantAnswers: {
       preparedness:
         "揺れを感じたら、まず姿勢を低くし、頭を守り、揺れが収まるまで動かないでください。窓ガラスから離れ、揺れている間は外へ駆け出したりエレベーターを使ったりしないでください。海岸付近で強い揺れや長い揺れを感じた場合は、このアプリを待たずに高台・内陸へ避難し、気象庁や自治体の津波情報に従ってください。日本で火災や急病などの緊急事態がある場合は、利用可能な電話から119番へ。避難所や経路は自治体により異なります。このガイドは参考情報であり、緊急通報や救助の手配はできません。",
@@ -1443,15 +1397,11 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantAnswer, setAssistantAnswer] = useState<ResearchQuestion | "fallback" | null>(null);
-  const [voiceListening, setVoiceListening] = useState(false);
-  const [voiceSpeaking, setVoiceSpeaking] = useState(false);
-  const [voiceMessage, setVoiceMessage] = useState("");
   const [prefectureQuery, setPrefectureQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState<JapanRegion | "all">("all");
   const [selectedPrefectureId, setSelectedPrefectureId] = useState<string>("tokyo");
   const [tourStep, setTourStep] = useState(0);
   const [tourPlaying, setTourPlaying] = useState(false);
-  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const text = copy[locale];
   const filteredPrefectures = japanPrefectures.filter((prefecture) => {
     const query = prefectureQuery.trim().toLocaleLowerCase();
@@ -1546,17 +1496,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    recognitionRef.current?.abort();
-    recognitionRef.current = null;
-    setVoiceListening(false);
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    setVoiceSpeaking(false);
   }, [locale]);
-
-  useEffect(() => () => {
-    recognitionRef.current?.abort();
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  }, []);
 
   function runScenario() {
     if (elapsed >= 38) setElapsed(0);
@@ -1572,9 +1512,6 @@ export default function Dashboard() {
     const boundedQuestion = question.slice(0, 200);
     setAssistantQuery(boundedQuestion);
     setAssistantAnswer(identifyQuestion(boundedQuestion) ?? "fallback");
-    setVoiceMessage("");
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    setVoiceSpeaking(false);
   }
 
   function askAssistant(event: React.FormEvent<HTMLFormElement>) {
@@ -1584,101 +1521,6 @@ export default function Dashboard() {
 
   function chooseQuestion(question: ResearchQuestion) {
     answerAssistantQuestion(text.suggestedQuestions[question]);
-  }
-
-  function toggleVoiceInput() {
-    if (voiceListening) {
-      recognitionRef.current?.stop();
-      setVoiceListening(false);
-      return;
-    }
-    const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    if (!SpeechRecognition || !window.isSecureContext) {
-      setVoiceMessage(text.voiceUnsupported);
-      return;
-    }
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = locale;
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .slice(event.resultIndex)
-          .filter((result) => result.isFinal)
-          .map((result) => result[0]?.transcript ?? "")
-          .join(" ")
-          .trim();
-        if (transcript) answerAssistantQuestion(transcript);
-        else setVoiceMessage(text.voiceNoSpeech);
-      };
-      recognition.onerror = (event) => {
-        if (event.error === "aborted") return;
-        setVoiceMessage(
-          event.error === "not-allowed" || event.error === "service-not-allowed"
-            ? text.voiceDenied
-            : event.error === "no-speech"
-              ? text.voiceNoSpeech
-              : text.voiceError,
-        );
-      };
-      recognition.onend = () => {
-        setVoiceListening(false);
-        if (recognitionRef.current === recognition) recognitionRef.current = null;
-      };
-      recognitionRef.current = recognition;
-      setVoiceMessage("");
-      setVoiceListening(true);
-      recognition.start();
-    } catch (recognitionError) {
-      console.error("Could not start browser speech recognition", recognitionError);
-      recognitionRef.current = null;
-      setVoiceListening(false);
-      setVoiceMessage(text.voiceError);
-    }
-  }
-
-  function toggleAssistantSpeech() {
-    if (!("speechSynthesis" in window)) {
-      setVoiceMessage(text.voiceOutputUnsupported);
-      return;
-    }
-    if (voiceSpeaking) {
-      window.speechSynthesis.cancel();
-      setVoiceSpeaking(false);
-      return;
-    }
-    if (assistantAnswer === null) return;
-    const answer = assistantAnswer === "fallback"
-      ? text.assistantFallback
-      : text.assistantAnswers[assistantAnswer];
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(answer);
-      utterance.lang = locale;
-      utterance.rate = 0.95;
-      const languagePrefix = locale.split("-")[0].toLowerCase();
-      const voices = window.speechSynthesis.getVoices();
-      utterance.voice =
-        voices.find((voice) => voice.lang.toLowerCase() === locale.toLowerCase()) ??
-        voices.find((voice) => voice.lang.toLowerCase().startsWith(`${languagePrefix}-`)) ??
-        null;
-      utterance.onend = () => setVoiceSpeaking(false);
-      utterance.onerror = (event) => {
-        setVoiceSpeaking(false);
-        if (event.error !== "canceled" && event.error !== "interrupted") {
-          setVoiceMessage(text.voiceOutputError);
-        }
-      };
-      setVoiceMessage("");
-      setVoiceSpeaking(true);
-      window.speechSynthesis.speak(utterance);
-    } catch (speechError) {
-      console.error("Could not play browser speech synthesis", speechError);
-      setVoiceSpeaking(false);
-      setVoiceMessage(text.voiceOutputError);
-    }
   }
 
   function refreshCatalog() {
@@ -2122,7 +1964,10 @@ export default function Dashboard() {
             <h2>{text.assistantTitle}</h2>
             <p className="scenario-description">{text.assistantDescription}</p>
           </div>
-          <span className="assistant-mode"><i />{text.assistantMode}</span>
+          <div className="assistant-header-actions">
+            <span className="assistant-mode"><i />{text.assistantMode}</span>
+            <AiVoiceRoom locale={locale} />
+          </div>
         </div>
         <form className="assistant-form" onSubmit={askAssistant}>
           <label className="sr-only" htmlFor="assistant-query">{text.assistantPlaceholder}</label>
@@ -2135,29 +1980,6 @@ export default function Dashboard() {
           />
           <button type="submit">{text.ask}<span aria-hidden="true">↗</span></button>
         </form>
-        <div className="assistant-voice-controls">
-          <button
-            type="button"
-            className={voiceListening ? "voice-button voice-listening" : "voice-button"}
-            onClick={toggleVoiceInput}
-            aria-pressed={voiceListening}
-          >
-            <span aria-hidden="true">{voiceListening ? "■" : "◉"}</span>
-            {voiceListening ? text.voiceListening : text.voiceInput}
-          </button>
-          <button
-            type="button"
-            className="voice-button voice-speak-button"
-            onClick={toggleAssistantSpeech}
-            aria-pressed={voiceSpeaking}
-            disabled={assistantAnswer === null && !voiceSpeaking}
-          >
-            <span aria-hidden="true">{voiceSpeaking ? "■" : "◖))"}</span>
-            {voiceSpeaking ? text.voiceStop : text.voiceSpeak}
-          </button>
-          <p>{text.voicePrivacy}</p>
-        </div>
-        {voiceMessage && <p className="assistant-voice-message" role="status">{voiceMessage}</p>}
         <div className="suggested-questions">
           {(Object.keys(text.suggestedQuestions) as ResearchQuestion[]).map((question) => (
             <button type="button" key={question} onClick={() => chooseQuestion(question)}>

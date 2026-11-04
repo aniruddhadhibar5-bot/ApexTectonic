@@ -33,8 +33,8 @@ Browser-generated exercise input ---> Canvas illustrations
                                       (separate from catalog)
 
 Curated question guide -----------> primary-source links
-Optional browser speech input ----> curated question matcher
-Curated answer -------------------> optional speech synthesis
+Gemini-style voice room ---------> scripted UI preview only
+                                    (no model, microphone, or network audio)
 Synthetic feature generator ------> browser-local classifier
                                     (toy data; not a predictor)
 
@@ -95,7 +95,7 @@ The offline training lab creates a deterministic, synthetic two-class feature da
 
 Peer location sharing is off by default. After a user explicitly starts sharing and grants browser geolocation permission, coordinates are sent only to the currently paired peer over the existing local WebRTC data channel. Incoming coordinates are range-checked and stale updates expire; local and remote coordinates remain transient in component memory and are not written to local storage. Users can stop sharing, and peer disconnection clears location state. This is not a continuous background tracker or an emergency location service.
 
-The assistant offers optional browser-native English/Japanese speech recognition and speech synthesis for its curated answers. Browser support and installed voices vary. Speech recognition can depend on an external browser/vendor service and may require internet; audio processing and retention follow that provider's policy. Hyperion does not upload or persist microphone audio itself. Typed questions remain available offline, and playback requires an explicit user action. This adds voice I/O, not a generative AI model or unrestricted safety advisor.
+The Gemini-style voice room is currently a bilingual interface preview with a scripted example transcript. Gemini Live API is not configured; no microphone permission is requested, audio is not captured, and no model request is made. A production live voice integration would need a secure server-side Gemini Live API session, protected credentials, explicit audio/data consent, connection lifecycle and failure handling, and a safety review. The dashboard's separate typed research guide remains curated and is not generative AI.
 
 The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Separately, the installed PWA can connect two browsers with manually exchanged WebRTC offer/answer descriptions over a shared, functioning local Wi-Fi/hotspot without an internet connection. Opt-in location is visible to the paired peer only while sharing is active and is not retained by the app. It does not create that network, use Wi-Fi Direct/Bluetooth, or provide cellular voice/SMS, satellite, radio/mesh, emergency dispatch, identity verification, or guaranteed delivery. Local notes use unencrypted browser storage. Pairing codes must be shared privately; network/router policy and browser candidate handling may prevent a connection.
 
