@@ -220,6 +220,12 @@ const copy = {
     aboutImageAlt:
       "Original concept illustration of a compact seismic sensor module, shown as a design visualization rather than a photograph of connected hardware.",
     aboutImageCaption: "ORIGINAL HARDWARE CONCEPT · NOT A CONNECTED DEVICE",
+    hardwareListLabel: "Illustrative hardware concept components",
+    hardwareComponents: [
+      { title: "3-axis MEMS", description: "Concept sensor element · no physical sensor connected" },
+      { title: "Edge processing", description: "Illustrative local signal-quality check" },
+      { title: "Signed packet", description: "Concept data integrity · no live telemetry" },
+    ],
     aboutFacts: ["EN / 日本語", "SOURCE-LINKED", "SIMULATION CLEARLY LABELED"],
     howEyebrow: "SYSTEM TOUR / 02",
     howTitle: "How the experience works",
@@ -254,6 +260,7 @@ const copy = {
     officialLink: "Open official source",
     sourcesOnly: "PRIMARY SOURCES · NO UNVERIFIED HEADLINES",
     demoClipEyebrow: "INTERACTIVE DEMO / RENDERED LIVE",
+    demoAutoLabel: "AUTO TOUR · SIMULATION ONLY · NO DISPATCH",
     demoClipTitle: "A guided system walkthrough",
     demoClipDescription:
       "Play a short, generated visual tour of the catalog, illustrative signal, Japan view, and review boundary. This is a browser animation—not recorded field footage.",
@@ -500,6 +507,12 @@ const copy = {
     aboutImageAlt:
       "小型地震センサーモジュールのオリジナル概念イラスト。実際に接続されたハードウェアの写真ではなく、設計イメージです。",
     aboutImageCaption: "オリジナル・ハードウェア概念図 · 実機未接続",
+    hardwareListLabel: "説明用ハードウェア概念の構成要素",
+    hardwareComponents: [
+      { title: "3軸MEMS", description: "センサーの概念図 · 実機未接続" },
+      { title: "エッジ処理", description: "信号品質確認の説明用表示" },
+      { title: "署名付きパケット", description: "データ完全性の概念 · 実データなし" },
+    ],
     aboutFacts: ["英語 / 日本語", "出典リンク付き", "シミュレーション表示"],
     howEyebrow: "システムツアー / 02",
     howTitle: "この体験の仕組み",
@@ -534,6 +547,7 @@ const copy = {
     officialLink: "公式情報を開く",
     sourcesOnly: "一次情報 · 未確認見出しなし",
     demoClipEyebrow: "インタラクティブデモ / ライブ描画",
+    demoAutoLabel: "自動ツアー · シミュレーションのみ · 警報配信なし",
     demoClipTitle: "システムのガイド付きツアー",
     demoClipDescription:
       "カタログ、説明用信号、日本周辺の地図、レビュー境界を生成アニメーションで紹介します。録画された現地映像ではありません。",
@@ -1418,6 +1432,8 @@ export default function Dashboard() {
   const [selectedPrefectureId, setSelectedPrefectureId] = useState<string>("tokyo");
   const [tourStep, setTourStep] = useState(0);
   const [tourPlaying, setTourPlaying] = useState(false);
+  const autoTourStarted = useRef(false);
+  const tourManuallyControlled = useRef(false);
   const text = copy[locale];
   const filteredPrefectures = japanPrefectures.filter((prefecture) => {
     const query = prefectureQuery.trim().toLocaleLowerCase();
@@ -1510,6 +1526,72 @@ export default function Dashboard() {
   }, [text.demoClipSteps.length, tourPlaying]);
 
   useEffect(() => {
+    let frame = 0;
+    const updateProgress = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
+        document.documentElement.style.setProperty("--scroll-progress", String(progress));
+        frame = 0;
+      });
+    };
+    updateProgress();
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    window.addEventListener("resize", updateProgress);
+    return () => {
+      window.removeEventListener("scroll", updateProgress);
+      window.removeEventListener("resize", updateProgress);
+      window.cancelAnimationFrame(frame);
+      document.documentElement.style.removeProperty("--scroll-progress");
+    };
+  }, []);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduceMotion.matches) return;
+
+    const sections = document.querySelectorAll<HTMLElement>(
+      "main > section, main > .status-banner, main > .how-section .how-card",
+    );
+    if (!("IntersectionObserver" in window)) return;
+
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-in-view");
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -5% 0px" });
+
+    sections.forEach((section, index) => {
+      section.classList.add("scroll-reveal");
+      if (section.classList.contains("how-card")) {
+        section.style.setProperty("--reveal-delay", `${(index % 4) * 85}ms`);
+      }
+      revealObserver.observe(section);
+    });
+
+    return () => revealObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const section = document.getElementById("how-it-works");
+    if (!section || !("IntersectionObserver" in window)) return;
+
+    const autoTourObserver = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || autoTourStarted.current) return;
+      autoTourStarted.current = true;
+      autoTourObserver.disconnect();
+      if (!tourManuallyControlled.current) setTourPlaying(true);
+    }, { threshold: 0.28 });
+
+    autoTourObserver.observe(section);
+    return () => autoTourObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
@@ -1568,6 +1650,7 @@ export default function Dashboard() {
 
   return (
     <main className="shell">
+      <div className="scroll-progress" aria-hidden="true" />
       <AnimatedCanvas kind="ambient" locale={locale} label={text.ambientDescription} />
       <header className="topbar">
         <div className="brand-lockup">
@@ -1626,17 +1709,30 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-        <figure className="about-visual">
-          <Image
-            src="/images/hyperion-sensor-concept.svg"
-            alt={text.aboutImageAlt}
-            width={960}
-            height={600}
-            sizes="(max-width: 800px) 100vw, 46vw"
-            className="concept-image"
-          />
-          <figcaption>{text.aboutImageCaption}</figcaption>
-        </figure>
+        <div className="hardware-visual-group">
+          <figure className="about-visual">
+            <div className="hardware-render">
+              <Image
+                src="/images/hyperion-sensor-concept.svg"
+                alt={text.aboutImageAlt}
+                width={960}
+                height={600}
+                sizes="(max-width: 800px) 100vw, 46vw"
+                className="concept-image"
+                priority
+              />
+            </div>
+            <figcaption>{text.aboutImageCaption}</figcaption>
+          </figure>
+          <ul className="hardware-components" aria-label={text.hardwareListLabel}>
+            {text.hardwareComponents.map((component, index) => (
+              <li key={component.title}>
+                <span>0{index + 1}</span>
+                <div><strong>{component.title}</strong><small>{component.description}</small></div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <div className="status-banner"><span className="status-dot" /><div><strong>{text.online} · {text.statusTitle}</strong><p>{text.status}</p></div><span className="status-tail">{text.simulation}</span></div>
@@ -1706,6 +1802,7 @@ export default function Dashboard() {
             />
             <div className="demo-screen-overlay">
               <span className="demo-record-label"><i />{text.demoClipEyebrow}</span>
+              <span className="demo-auto-label">{text.demoAutoLabel}</span>
               <span className="demo-scene-counter">{text.demoClipStep} 0{tourStep + 1} / 04</span>
             </div>
             <div className="demo-screen-caption">
@@ -1734,7 +1831,10 @@ export default function Dashboard() {
                 type="button"
                 className="primary-button"
                 aria-label={tourPlaying ? text.demoClipPause : text.demoClipPlay}
-                onClick={() => setTourPlaying((playing) => !playing)}
+                onClick={() => {
+                  tourManuallyControlled.current = true;
+                  setTourPlaying((playing) => !playing);
+                }}
               >
                 <span aria-hidden="true">{tourPlaying ? "Ⅱ" : "▶"}</span>
                 {tourPlaying ? text.demoClipPause : text.demoClipPlay}
@@ -1743,6 +1843,7 @@ export default function Dashboard() {
                 type="button"
                 className="reset-button"
                 onClick={() => {
+                  tourManuallyControlled.current = true;
                   setTourPlaying(false);
                   setTourStep(0);
                 }}
