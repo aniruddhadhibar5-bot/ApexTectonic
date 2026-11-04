@@ -60,7 +60,7 @@ There is no JMA connection, Hi-net ingestion, gRPC runtime, sensor hardware, mac
 | Swift | Mobile client concept | `services/mobile-alert/` | Async example; no push delivery |
 | Dart + Flutter | Cross-platform client | Not scaffolded | Architectural idea only |
 
-R++ is treated as the original Rcpp integration concept for C++/R. No Rcpp bridge is included. This makes the visible 16-card list consistent with the currently described architecture while documenting the unimplemented bridge explicitly.
+R++ is treated as the original Rcpp integration concept for C++/R. No Rcpp bridge is included. The 16-stack inventory belongs in the README, not the operator dashboard.
 
 ## 4. Japan geography index
 
@@ -77,8 +77,11 @@ These points are not sensor coordinates. The prefecture directory does not model
 | [JMA Earthquake Early Warning overview](https://www.jma.go.jp/jma/en/Activities/eew1.html) | Curated explanatory reference | Hyperion does not receive or reproduce JMA EEW |
 | [JMA EEW limitations](https://www.jma.go.jp/jma/en/Activities/eew3.html) | Limitations and warning context | Follow current JMA and local-authority information directly |
 | [NIED Hi-net data information and terms](https://www.hinet.bosai.go.jp/about_data/?LANG=en) | Research-access pointer | No Hi-net waveform ingestion or rehosting; provider terms apply |
+| [Tokyo Fire Department 119 call guidance](https://www.tfd.metro.tokyo.lg.jp/lfe/119/index.html) | Reference for the emergency-contact panel | Tokyo guidance; the dashboard does not dispatch calls or emergency services |
 
-The dashboard’s “updates” area displays real catalog data returned by the existing USGS route, when available, and links to primary public sources. It does not create news headlines, scrape unverified social posts, or claim to aggregate JMA bulletins.
+The dashboard’s “updates” area displays real catalog data returned by the existing USGS route, when available, and links to primary public sources. The catalog auto-refreshes every 60 seconds and displays the feed-generation and last-check timestamps. It does not create news headlines, scrape unverified social posts, or claim to aggregate JMA bulletins.
+
+The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Internet-free communication still requires an available path such as cellular voice/SMS, satellite, or dedicated local radio/mesh equipment; the web app implements none of these.
 
 ## 6. Research questions and non-claims
 

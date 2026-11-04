@@ -104,25 +104,6 @@ const japanPrefectures = [
   { id: "okinawa", en: "Okinawa", ja: "沖縄県", capitalEn: "Naha", capitalJa: "那覇市", region: "Kyushu & Okinawa", lat: 26.2124, lon: 127.6809 },
 ] as const;
 
-const languageStacks = [
-  { name: "Rust", area: "Edge packet authentication", areaJa: "エッジパケット認証", path: "services/edge-sensor/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "Zig", area: "Bounded frame decoder", areaJa: "上限付きフレームデコーダー", path: "services/zig-kernel-driver/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "C++20", area: "Scalar DSP filters and FFT", areaJa: "スカラーDSPフィルターとFFT", path: "services/dsp-engine/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "Julia", area: "Dimensionless diffusion model", areaJa: "無次元拡散モデル", path: "services/julian-tectonics/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "Python", area: "Async inference adapter", areaJa: "非同期推論アダプター", path: "services/ai-core/", status: "Adapter only; no trained model", statusJa: "アダプターのみ・学習済みモデルなし" },
-  { name: "Haskell", area: "Review eligibility rules", areaJa: "レビュー適格性ルール", path: "services/verifier/", status: "Review checks; not a proof", statusJa: "レビュー判定・安全証明ではありません" },
-  { name: "Go", area: "Ingestion routing example", areaJa: "取り込みルーティング例", path: "services/ingestion-mesh/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "Elixir", area: "OTP telemetry broker concept", areaJa: "OTPテレメトリーブローカー案", path: "services/telemetry-mesh/", status: "Planned; no service scaffold", statusJa: "計画段階・未実装" },
-  { name: "Java", area: "Human review queue", areaJa: "担当者レビューキュー", path: "services/infrastructure-orchestrator/", status: "Queue stub; no actuators", statusJa: "キュー例・制御機能なし" },
-  { name: "R", area: "Regional statistical example", areaJa: "地域統計の例", path: "services/analytics-r/", status: "Example implemented", statusJa: "実装例あり" },
-  { name: "PHP", area: "Admin portal entry point", areaJa: "管理ポータルのエントリー", path: "services/admin-portal/", status: "Minimal scaffold", statusJa: "最小構成" },
-  { name: "TypeScript", area: "Bilingual Next.js dashboard", areaJa: "二言語Next.jsダッシュボード", path: "apps/dashboard-ui/", status: "Dashboard implemented", statusJa: "ダッシュボード実装済み" },
-  { name: "WebAssembly", area: "Browser-side DSP package", areaJa: "ブラウザー側DSPパッケージ", path: "packages/wasm-dsp/", status: "Reserved; no WASM binary", statusJa: "予約領域・WASMバイナリなし" },
-  { name: "JavaScript + HTML", area: "Canvas visualization runtime", areaJa: "Canvas可視化ランタイム", path: "apps/dashboard-ui/src/app/", status: "Dashboard visualization", statusJa: "画面可視化に使用" },
-  { name: "Swift", area: "Async mobile alert example", areaJa: "非同期モバイル通知の例", path: "services/mobile-alert/", status: "Client example; no push", statusJa: "クライアント例・通知送信なし" },
-  { name: "Dart + Flutter", area: "Cross-platform mobile concept", areaJa: "クロスプラットフォームアプリ案", path: "apps/cross-platform/", status: "Planned; no app scaffold", statusJa: "計画段階・未実装" },
-] as const;
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -249,14 +230,6 @@ const copy = {
     clockTitle: "LIVE CLOCKS",
     japanTime: "JAPAN STANDARD TIME",
     utcTime: "COORDINATED UNIVERSAL TIME",
-    stacksEyebrow: "ENGINEERING MAP / 03",
-    stacksTitle: "Polyglot architecture cards",
-    stacksDescription:
-      "See the intended responsibility and the actual scaffold status for every language stack. A design concept is not presented as a completed service.",
-    stackStatus: "CURRENT SCAFFOLD",
-    stackCount: "16 LANGUAGE STACKS",
-    rcppNote:
-      "R++ / Rcpp was part of the original DSP integration concept; no Rcpp bridge is implemented in this repository.",
     locationsEyebrow: "JAPAN INDEX / 04",
     locationsTitle: "Explore all 47 prefectures",
     locationsDescription:
@@ -296,7 +269,7 @@ const copy = {
       "Model estimates require independent validation and authorized human review. This interface cannot issue evacuation guidance or operate physical infrastructure.",
     online: "DEMO MODE",
     dimensions: ["Integrity", "Coverage", "Latency", "Quality", "Resilience"],
-    nav: ["Overview", "Event catalog", "About", "How it works", "Stacks", "Prefectures", "Updates", "Research guide", "Sources"],
+    nav: ["Overview", "Event catalog", "About", "How it works", "Prefectures", "Updates", "Safety & comms", "Research guide", "Sources"],
     catalogEyebrow: "EXTERNAL CATALOG • OBSERVED EVENTS",
     catalogTitle: "Recent events near Japan",
     catalogDescription:
@@ -308,6 +281,7 @@ const copy = {
     },
     catalogCount: "EVENTS IN REGION",
     catalogUpdated: "FEED GENERATED",
+    catalogChecked: "LAST CHECKED",
     refresh: "Refresh",
     refreshing: "Refreshing…",
     noEvents: "No qualifying catalog entries in this time window.",
@@ -318,6 +292,29 @@ const copy = {
     magnitude: "MAG",
     depth: "DEPTH",
     openEvent: "Open USGS event",
+    safetyEyebrow: "EMERGENCY READINESS / SYSTEM BOUNDARIES",
+    safetyTitle: "Emergency contacts & offline readiness",
+    safetyDescription:
+      "A verified public emergency contact and an honest view of what this prototype can—and cannot—do.",
+    ambulanceLabel: "AMBULANCE / FIRE · JAPAN",
+    call119: "Call 119",
+    call119Description:
+      "119 is Japan’s ambulance and fire emergency number. This link opens your device’s phone handler; Hyperion cannot place calls, and a working telephone connection is required.",
+    emergencySource: "Tokyo Fire Department: 119 call guidance",
+    systemBoundaryTitle: "Capability status",
+    statusCatalog: "Public earthquake catalog",
+    statusCatalogValue: "USGS past-hour feed · auto-refresh",
+    statusTelemetry: "Field sensor telemetry",
+    statusTelemetryValue: "Not connected",
+    statusPrediction: "Calibrated earthquake prediction",
+    statusPredictionValue: "Not available · no validated model",
+    statusNotifications: "Emergency notifications",
+    statusNotificationsValue: "Not connected · no alerts sent",
+    offlineCommsTitle: "Communication when internet is down",
+    offlineCommsDescription:
+      "This website cannot deliver offline messages or calls. Text and voice still need a working path—such as cellular voice/SMS, satellite, or dedicated local radio/mesh equipment. Agree on a meeting point and keep official contacts available offline; if anyone is in immediate danger, try 119 from any available telephone.",
+    offlineCommsTip:
+      "A browser page cannot create a radio network or bypass a loss of telephone service. Check local authority guidance and your device/provider emergency-call capabilities.",
     assistantEyebrow: "AI ASSISTANCE • CURATED RESEARCH MODE",
     assistantTitle: "Seismic research guide",
     assistantMode: "CURATED / OFFLINE",
@@ -510,14 +507,6 @@ const copy = {
     clockTitle: "現在時刻",
     japanTime: "日本標準時",
     utcTime: "協定世界時",
-    stacksEyebrow: "エンジニアリング構成 / 03",
-    stacksTitle: "多言語アーキテクチャカード",
-    stacksDescription:
-      "各言語の想定責務と、リポジトリ内の実際の構成状況を表示します。設計案を完成済みサービスとして扱いません。",
-    stackStatus: "現在の構成",
-    stackCount: "16 言語スタック",
-    rcppNote:
-      "R++ / Rcppは当初のDSP連携案です。このリポジトリにRcppブリッジは実装されていません。",
     locationsEyebrow: "日本地域インデックス / 04",
     locationsTitle: "47都道府県を表示",
     locationsDescription:
@@ -557,7 +546,7 @@ const copy = {
       "モデル推定値には独立した検証と権限を持つ担当者の確認が必要です。避難案内や物理インフラの操作は行いません。",
     online: "デモモード",
     dimensions: ["完全性", "観測範囲", "遅延", "品質", "耐障害性"],
-    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "技術構成", "都道府県", "情報ソース", "調査ガイド", "参考資料"],
+    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "都道府県", "情報ソース", "緊急時・通信", "調査ガイド", "参考資料"],
     catalogEyebrow: "外部カタログ • 観測済みイベント",
     catalogTitle: "日本周辺の最近の地震",
     catalogDescription:
@@ -569,6 +558,7 @@ const copy = {
     },
     catalogCount: "対象地域のイベント",
     catalogUpdated: "フィード生成時刻",
+    catalogChecked: "最終確認",
     refresh: "更新",
     refreshing: "更新中…",
     noEvents: "この時間帯に該当するカタログイベントはありません。",
@@ -579,6 +569,29 @@ const copy = {
     magnitude: "マグニチュード",
     depth: "深さ",
     openEvent: "USGSイベントを開く",
+    safetyEyebrow: "緊急時の備え / システムの範囲",
+    safetyTitle: "緊急連絡先・オフライン時の備え",
+    safetyDescription:
+      "公的な緊急連絡先と、この試作システムでできること・できないことを明確に示します。",
+    ambulanceLabel: "救急車・消防車 · 日本",
+    call119: "119番に電話",
+    call119Description:
+      "日本の救急車・消防車の緊急通報番号は119番です。このリンクは端末の電話機能を開きます。Hyperionから発信はできず、電話回線への接続が必要です。",
+    emergencySource: "東京消防庁：119番通報の案内",
+    systemBoundaryTitle: "機能の接続状況",
+    statusCatalog: "公開地震カタログ",
+    statusCatalogValue: "USGS過去1時間フィード · 自動更新",
+    statusTelemetry: "現地センサーテレメトリー",
+    statusTelemetryValue: "未接続",
+    statusPrediction: "校正済み地震予測",
+    statusPredictionValue: "利用不可 · 検証済みモデルなし",
+    statusNotifications: "緊急通知",
+    statusNotificationsValue: "未接続 · 通知送信なし",
+    offlineCommsTitle: "インターネットが使えない場合の通信",
+    offlineCommsDescription:
+      "このウェブサイトは、通信網なしでメッセージや通話を届けることはできません。テキストや音声には、携帯電話の音声/SMS、衛星通信、専用の無線・メッシュ機器など、利用可能な通信経路が必要です。集合場所を決め、公的な連絡先をオフラインでも確認できるようにしてください。差し迫った危険がある場合は、利用可能な電話から119番を試してください。",
+    offlineCommsTip:
+      "ブラウザーだけで無線ネットワークを作ったり、電話回線の障害を回避したりすることはできません。自治体の案内と端末・通信事業者の緊急通報機能をご確認ください。",
     assistantEyebrow: "AI支援 • 出典付きリサーチモード",
     assistantTitle: "地震リサーチガイド",
     assistantMode: "出典付き / オフライン",
@@ -1526,7 +1539,7 @@ export default function Dashboard() {
         </div>
         <nav className="section-nav" aria-label={text.navLabel}>
           {text.nav.map((item, index) => (
-            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#architecture", "#locations", "#updates", "#assistant", "#research"][index]}>{item}</a>
+            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#locations", "#updates", "#safety", "#assistant", "#research"][index]}>{item}</a>
           ))}
         </nav>
         <div className="header-controls">
@@ -1607,6 +1620,7 @@ export default function Dashboard() {
           <div className={`catalog-connection catalog-${catalog.status}`}><i />{text.catalogStatus[catalog.status]}</div>
           <div><small>{text.catalogCount}</small><strong>{catalog.status === "loading" && catalog.fetchedAt === null ? "—" : catalog.events.length}</strong></div>
           <div><small>{text.catalogUpdated}</small><strong className="catalog-time">{formatFeedTime(catalog.feedGeneratedAt)}</strong></div>
+          <div><small>{text.catalogChecked}</small><strong className="catalog-time">{formatFeedTime(catalog.fetchedAt)}</strong></div>
         </div>
         {catalog.status === "error" && (
           <div className="catalog-error" role="status">
@@ -1714,33 +1728,6 @@ export default function Dashboard() {
         <p className="how-footnote"><span>i</span>{text.howFootnote}</p>
       </section>
 
-      <section className="stack-section panel" id="architecture">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">{text.stacksEyebrow}</p>
-            <h2>{text.stacksTitle}</h2>
-            <p className="scenario-description">{text.stacksDescription}</p>
-          </div>
-          <span className="section-counter">{text.stackCount}</span>
-        </div>
-        <div className="stack-grid">
-          {languageStacks.map((stack, index) => (
-            <article className="stack-card" key={stack.name} style={{ "--card-index": index } as React.CSSProperties}>
-              <div className="stack-card-top">
-                <span className="stack-index">0{index + 1}</span>
-                <span className={`stack-status ${stack.status.includes("Planned") || stack.status.includes("Reserved") ? "stack-planned" : "stack-scaffolded"}`}>
-                  <i />{locale === "ja-JP" ? stack.statusJa : stack.status}
-                </span>
-              </div>
-              <h3>{stack.name}</h3>
-              <p>{locale === "ja-JP" ? stack.areaJa : stack.area}</p>
-              <code>{stack.path}</code>
-            </article>
-          ))}
-        </div>
-        <p className="stack-note"><span>i</span>{text.rcppNote}</p>
-      </section>
-
       <section className="location-section panel" id="locations">
         <div className="section-heading">
           <div>
@@ -1788,7 +1775,7 @@ export default function Dashboard() {
             </button>
           )) : <p className="prefecture-empty">{text.noPrefectures}</p>}
         </div>
-        <p className="stack-note"><span>i</span>{text.coordinateNote} · {locale === "ja-JP" ? selectedPrefecture.ja : selectedPrefecture.en} / {locale === "ja-JP" ? selectedPrefecture.capitalJa : selectedPrefecture.capitalEn}: {selectedPrefecture.lat.toFixed(4)}°N, {selectedPrefecture.lon.toFixed(4)}°E</p>
+        <p className="reference-note"><span>i</span>{text.coordinateNote} · {locale === "ja-JP" ? selectedPrefecture.ja : selectedPrefecture.en} / {locale === "ja-JP" ? selectedPrefecture.capitalJa : selectedPrefecture.capitalEn}: {selectedPrefecture.lat.toFixed(4)}°N, {selectedPrefecture.lon.toFixed(4)}°E</p>
       </section>
 
       <section className="updates-section panel" id="updates">
@@ -1824,6 +1811,47 @@ export default function Dashboard() {
               <span><small>USGS / PAST-HOUR CATALOG</small><strong>Original GeoJSON feed</strong></span><i>↗</i>
             </a>
           </div>
+        </div>
+      </section>
+
+      <section className="safety-section panel" id="safety">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">{text.safetyEyebrow}</p>
+            <h2>{text.safetyTitle}</h2>
+            <p className="scenario-description">{text.safetyDescription}</p>
+          </div>
+          <span className="safety-status-tag">{text.simulation}</span>
+        </div>
+        <div className="safety-grid">
+          <article className="emergency-call-card">
+            <p className="safety-card-label">{text.ambulanceLabel}</p>
+            <strong className="emergency-number">119</strong>
+            <p>{text.call119Description}</p>
+            <a className="emergency-call-button" href="tel:119">{text.call119}</a>
+            <a
+              className="emergency-source-link"
+              href="https://www.tfd.metro.tokyo.lg.jp/lfe/119/index.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {text.emergencySource} ↗
+            </a>
+          </article>
+          <div className="capability-card">
+            <h3>{text.systemBoundaryTitle}</h3>
+            <dl>
+              <div><dt>{text.statusCatalog}</dt><dd className="capability-connected">{catalog.status === "ready" ? text.statusCatalogValue : text.catalogStatus[catalog.status]}</dd></div>
+              <div><dt>{text.statusTelemetry}</dt><dd>{text.statusTelemetryValue}</dd></div>
+              <div><dt>{text.statusPrediction}</dt><dd>{text.statusPredictionValue}</dd></div>
+              <div><dt>{text.statusNotifications}</dt><dd>{text.statusNotificationsValue}</dd></div>
+            </dl>
+          </div>
+          <article className="offline-comms-card">
+            <p className="safety-card-label">{text.offlineCommsTitle}</p>
+            <p>{text.offlineCommsDescription}</p>
+            <p className="offline-comms-tip"><span>i</span>{text.offlineCommsTip}</p>
+          </article>
         </div>
       </section>
 

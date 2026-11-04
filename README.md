@@ -12,14 +12,15 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 
 ## What you can explore
 
-- **Japan event catalog:** a server-side proxy retrieves the USGS past-hour GeoJSON feed, filters events to a broad Japan-region bounding box, and presents event time, magnitude, depth, coordinates, and a source link. Refresh and unavailable-feed states are shown explicitly.
+- **Japan event catalog:** a server-side proxy retrieves the USGS past-hour GeoJSON feed, filters events to a broad Japan-region bounding box, and presents event time, magnitude, depth, coordinates, and a source link. It auto-refreshes every 60 seconds and shows feed-generation and last-check times.
 - **Animated interface:** a procedural network-field backdrop, a Japan-centered orbiting globe, service topology, waveform, radar-style visualization, and a rotating isometric sensor concept.
 - **About and system tour:** bilingual project context plus a four-step walkthrough separating the USGS catalog from generated training visuals and cited research.
 - **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, topology, and sensor graphics. It is not a recorded field video.
 - **Japan time desk:** live browser-clock views for Japan Standard Time (JST) and UTC.
 - **47-prefecture index:** searchable and region-filterable prefecture/capital directory with approximate city-center reference coordinates. These coordinates are not sensor locations.
+- **Emergency readiness panel:** links to Tokyo Fire Department 119 guidance and the device phone handler, while stating that predictions, sensor telemetry, alert delivery, and offline calling/messaging are not connected.
 - **Source and update desk:** the latest event in the USGS Japan-region catalog, when present, plus direct links to JMA and USGS primary sources. It does not invent headlines or claim to aggregate official warning news.
-- **16 language-stack cards:** an honest, per-stack view of the intended system role and current repository status.
+- **README language-stack inventory:** all 16 language stacks, their intended roles, and honest implementation status are documented in the architecture table below; the dashboard does not render a language-card section.
 - **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
 - **Synthetic Nankai training exercise:** replay, pause, reset, and scrub a fictional signal-review sequence; select generated input-noise and station-dropout profiles.
 - **Bilingual research guide:** switch the interface between English and Japanese, browse cited JMA, USGS, and NIED Hi-net documentation, and ask supported questions of an offline, curated answer guide.
@@ -74,9 +75,9 @@ npm run start
 
 This is a deliberately scoped starter, not a finished implementation of every language or service in the original concept. Hardware interfaces, production gRPC services, trained models, authentication, deployment hardening, observability, and emergency integrations are not provided.
 
-## Polyglot architecture cards
+## Polyglot architecture inventory
 
-These are the language stacks shown in the dashboard. “Implemented” means an example or scaffold exists; it does not mean a production-ready, connected service.
+These are the 16 language stacks in the project concept. “Implemented” means an example or scaffold exists; it does not mean a production-ready, connected service.
 
 | Stack | Intended role | Current repository status |
 | --- | --- | --- |
@@ -104,6 +105,8 @@ The original “R++” idea is treated as an Rcpp/C++ integration concept only; 
 The dashboard lists every prefecture and its capital-city reference coordinates, grouped into eight conventional regions: Hokkaido, Tohoku, Kanto, Chubu, Kansai, Chugoku, Shikoku, and Kyushu/Okinawa. The coordinates are approximate city-center references. They are provided for geographic orientation only and do not indicate sensor placement, seismic coverage, local hazard, or current conditions.
 
 The USGS catalog filter uses a broad rectangular geographic window, not Japanese administrative boundaries. An event’s appearance or absence in this catalog must not be interpreted as a local safety status.
+
+The emergency readiness panel links to the [Tokyo Fire Department's 119 call guidance](https://www.tfd.metro.tokyo.lg.jp/lfe/119/index.html). Its `tel:119` link asks the device to open its phone handler; this site cannot place calls, dispatch ambulances, or provide communications when telephone service is unavailable. Offline voice/text requires a working communication path such as cellular, satellite, or dedicated radio/mesh equipment.
 
 ## Research and development
 
