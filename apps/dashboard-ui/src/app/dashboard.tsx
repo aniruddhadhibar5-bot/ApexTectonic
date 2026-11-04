@@ -7,7 +7,7 @@ import TrainingLab from "./training-lab";
 import AiVoiceRoom from "./ai-voice-room";
 
 type Locale = "en-US" | "ja-JP";
-type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
+type VisualKind = "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
 type PreviewChannel = "mobile" | "web" | "watch" | "signage";
 type DrillProfile = "baseline" | "noise" | "dropout";
 type JapanRegion = "Hokkaido" | "Tohoku" | "Kanto" | "Chubu" | "Kansai" | "Chugoku" | "Shikoku" | "Kyushu & Okinawa";
@@ -199,8 +199,6 @@ const copy = {
     japanese: "日本語",
     simulation: "SYNTHETIC DATA • TRAINING ONLY",
     simulated: "SIMULATED",
-    topology: "Service topology",
-    topologyDescription: "Animated demonstration paths; not live packet traffic.",
     waveform: "Signal preview",
     waveformDescription: "Generated sample waveforms; not instrument readings.",
     radar: "Pipeline dimensions",
@@ -481,8 +479,6 @@ const copy = {
     japanese: "日本語",
     simulation: "合成データ • 訓練専用",
     simulated: "シミュレーション",
-    topology: "サービス構成",
-    topologyDescription: "アニメーションはデモ用です。実際の通信状況ではありません。",
     waveform: "信号プレビュー",
     waveformDescription: "生成した波形です。実際の観測データではありません。",
     radar: "パイプライン指標",
@@ -755,10 +751,6 @@ const copy = {
   },
 } as const;
 
-const nodes = [
-  "Rust", "Zig", "C++", "R++", "Julia", "Python", "Haskell", "Go",
-  "Elixir", "Java", "R", "PHP", "TypeScript", "WASM", "Swift", "Dart",
-];
 const previewChannels: PreviewChannel[] = ["mobile", "web", "watch", "signage"];
 
 function drawAmbient(context: CanvasRenderingContext2D, width: number, height: number, time: number) {
@@ -839,12 +831,11 @@ function drawWalkthrough(
   height: number,
   time: number,
   step: number,
-  simulationLabel: string,
 ) {
   const scene = step % 4;
-  if (scene === 0) drawTopology(context, width, height, time, simulationLabel);
-  else if (scene === 1) drawWave(context, width, height, time, 15, "baseline");
-  else if (scene === 2) drawGlobe(context, width, height, time);
+  if (scene === 0) drawWave(context, width, height, time, 15, "baseline");
+  else if (scene === 1) drawGlobe(context, width, height, time);
+  else if (scene === 2) drawRadar(context, width, height, time);
   else drawDevice(context, width, height, time);
 
   const wash = context.createLinearGradient(0, 0, 0, height);
@@ -870,65 +861,6 @@ function drawWalkthrough(
   context.shadowBlur = 12;
   context.fill();
   context.restore();
-}
-
-function drawTopology(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  time: number,
-  simulationLabel: string,
-) {
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const radius = Math.max(50, Math.min(width, height) * 0.34);
-  const positions = nodes.map((_, index) => {
-    const angle = (index / nodes.length) * Math.PI * 2 - Math.PI / 2;
-    return { x: centerX + Math.cos(angle) * radius, y: centerY + Math.sin(angle) * radius };
-  });
-
-  positions.forEach((point, index) => {
-    const next = positions[(index + 1) % positions.length];
-    context.strokeStyle = "rgba(91, 157, 208, 0.22)";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(point.x, point.y);
-    context.lineTo(next.x, next.y);
-    context.stroke();
-
-    const progress = (time * 0.00008 + index / positions.length) % 1;
-    context.fillStyle = "#69e0c3";
-    context.beginPath();
-    context.arc(
-      point.x + (next.x - point.x) * progress,
-      point.y + (next.y - point.y) * progress,
-      2.4,
-      0,
-      Math.PI * 2,
-    );
-    context.fill();
-
-    context.fillStyle = "#183048";
-    context.beginPath();
-    context.arc(point.x, point.y, 13, 0, Math.PI * 2);
-    context.fill();
-    context.strokeStyle = "#5b9dd0";
-    context.stroke();
-    context.fillStyle = "#e9f4ff";
-    context.font = "9px ui-monospace, monospace";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(nodes[index], point.x, point.y);
-  });
-
-  context.fillStyle = "#69e0c3";
-  context.beginPath();
-  context.arc(centerX, centerY, 7 + Math.sin(time / 500) * 1.5, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#b8cddd";
-  context.font = "11px ui-monospace, monospace";
-  context.textAlign = "center";
-  context.fillText(simulationLabel, centerX, centerY + 25);
 }
 
 function drawWave(
@@ -1265,9 +1197,8 @@ function AnimatedCanvas({
       context.clearRect(0, 0, width, height);
       if (kind === "ambient") drawAmbient(context, width, height, time);
       if (kind === "walkthrough") {
-        drawWalkthrough(context, width, height, time, simulationRef.current.step, copy[locale].simulated);
+        drawWalkthrough(context, width, height, time, simulationRef.current.step);
       }
-      if (kind === "topology") drawTopology(context, width, height, time, copy[locale].simulated);
       if (kind === "wave") {
         drawWave(context, width, height, time, simulationRef.current.elapsed, simulationRef.current.profile);
       }
@@ -2097,27 +2028,21 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid">
-        <article className="panel topology-panel">
-          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.topology}</h2></div><span className="panel-index">01 / 04</span></div>
-          <p className="panel-copy">{text.topologyDescription}</p>
-          <AnimatedCanvas kind="topology" locale={locale} label={text.topologyDescription} />
-          <div className="node-list">{nodes.map((node) => <span key={node}>{node}</span>)}</div>
-        </article>
+      <section className="grid visualization-grid">
         <article className="panel">
-          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.waveform}</h2></div><span className="panel-index">02 / 04</span></div>
+          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.waveform}</h2></div><span className="panel-index">01 / 03</span></div>
           <p className="panel-copy">{text.waveformDescription} {text.waveformProfile}</p>
           <AnimatedCanvas kind="wave" locale={locale} label={`${text.waveformDescription} ${text.waveformProfile}`} elapsed={elapsed} profile={profile} />
           <div className="legend"><span><i className="mint" />X</span><span><i className="blue" />Y</span><span><i className="violet" />Z</span></div>
         </article>
         <article className="panel">
-          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.radar}</h2></div><span className="panel-index">03 / 04</span></div>
+          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.radar}</h2></div><span className="panel-index">02 / 03</span></div>
           <p className="panel-copy">{text.radarDescription}</p>
           <AnimatedCanvas kind="radar" locale={locale} label={text.radarDescription} />
           <div className="dimension-list">{text.dimensions.map((item, index) => <span key={item}><i>{String(index + 1).padStart(2, "0")}</i>{item}</span>)}</div>
         </article>
         <article className="panel device-panel">
-          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.device}</h2></div><span className="panel-index">04 / 04</span></div>
+          <div className="panel-heading"><div><p className="eyebrow">{text.simulation}</p><h2>{text.device}</h2></div><span className="panel-index">03 / 03</span></div>
           <p className="panel-copy">{text.deviceDescription}</p>
           <AnimatedCanvas kind="device" locale={locale} label={text.deviceDescription} />
           <div className="device-caption"><span>{text.deviceType}</span><span>{text.deviceAxes}</span></div>

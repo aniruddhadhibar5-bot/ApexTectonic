@@ -7,3 +7,5 @@ __pycache__/
 *.py[cod]
 .vscode/
 *.tsbuildinfo
+apps/dashboard-ui/.env*
+!apps/dashboard-ui/.env.example

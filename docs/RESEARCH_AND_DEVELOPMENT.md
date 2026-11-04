@@ -33,8 +33,9 @@ Browser-generated exercise input ---> Canvas illustrations
                                       (separate from catalog)
 
 Curated question guide -----------> primary-source links
-Gemini-style voice room ---------> scripted UI preview only
-                                    (no model, microphone, or network audio)
+Opt-in Gemini Live voice --------> server-minted constrained token
+                                    -> browser WebSocket + mic/audio
+                                    (audio/text streamed to Gemini)
 Synthetic feature generator ------> browser-local classifier
                                     (toy data; not a predictor)
 
@@ -95,7 +96,7 @@ The offline training lab creates a deterministic, synthetic two-class feature da
 
 Peer location sharing is off by default. After a user explicitly starts sharing and grants browser geolocation permission, coordinates are sent only to the currently paired peer over the existing local WebRTC data channel. Incoming coordinates are range-checked and stale updates expire; local and remote coordinates remain transient in component memory and are not written to local storage. Users can stop sharing, and peer disconnection clears location state. This is not a continuous background tracker or an emergency location service.
 
-The Gemini-style voice room is currently a bilingual interface preview with a scripted example transcript. Gemini Live API is not configured; no microphone permission is requested, audio is not captured, and no model request is made. A production live voice integration would need a secure server-side Gemini Live API session, protected credentials, explicit audio/data consent, connection lifecycle and failure handling, and a safety review. The dashboard's separate typed research guide remains curated and is not generative AI.
+The bilingual voice room can start a Gemini Live session after a server operator configures `GEMINI_API_KEY`. Starting requires an explicit user action and microphone permission; live audio and typed messages stream to Google, where live responses and transcripts are returned to the browser. A Next.js route mints a one-use, short-lived ephemeral token constrained to an operator-selected model, audio response mode, transcription, and system instruction. The permanent key is not sent to the browser. The route checks request origin and has a basic in-process per-IP request cap; it is not user authentication or durable production rate limiting. Public deployment requires authenticated access, distributed abuse controls, privacy/retention review, and deployment secrets management. The assistant can produce errors or stale information; it is not a warning, predictor, dispatch, or safety-control system. The separate typed research guide remains curated and is not generative AI.
 
 The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Separately, the installed PWA can connect two browsers with manually exchanged WebRTC offer/answer descriptions over a shared, functioning local Wi-Fi/hotspot without an internet connection. Opt-in location is visible to the paired peer only while sharing is active and is not retained by the app. It does not create that network, use Wi-Fi Direct/Bluetooth, or provide cellular voice/SMS, satellite, radio/mesh, emergency dispatch, identity verification, or guaranteed delivery. Local notes use unencrypted browser storage. Pairing codes must be shared privately; network/router policy and browser candidate handling may prevent a connection.
 

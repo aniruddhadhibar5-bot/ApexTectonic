@@ -13,9 +13,9 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 ## What you can explore
 
 - **Japan event catalog:** a server-side proxy retrieves the USGS past-hour GeoJSON feed, filters events to a broad Japan-region bounding box, and presents event time, magnitude, depth, coordinates, and a source link. It auto-refreshes every 60 seconds and shows feed-generation and last-check times.
-- **Animated interface:** a procedural network-field backdrop, a Japan-centered orbiting globe, service topology, waveform, radar-style visualization, and a rotating isometric sensor concept.
+- **Animated interface:** a procedural network-field backdrop, a Japan-centered orbiting globe, waveform and radar-style visualizations, and a rotating isometric sensor concept.
 - **About and system tour:** bilingual project context plus a four-step walkthrough separating the USGS catalog from generated training visuals and cited research.
-- **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, topology, and sensor graphics. It is not a recorded field video.
+- **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, radar, and sensor graphics. It is not a recorded field video.
 - **Japan time desk:** live browser-clock views for Japan Standard Time (JST) and UTC.
 - **47-prefecture index:** searchable and region-filterable prefecture/capital directory with approximate city-center reference coordinates. These coordinates are not sensor locations.
 - **Emergency readiness panel:** links to Tokyo Fire Department 119 guidance and the device phone handler, and states that predictions, sensor telemetry, and emergency-alert delivery are not connected.
@@ -25,7 +25,7 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **README language-stack inventory:** all 16 language stacks, their intended roles, and honest implementation status are documented in the architecture table below; the dashboard does not render a language-card section.
 - **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
 - **Synthetic Nankai training exercise:** replay, pause, reset, and scrub a fictional signal-review sequence; select generated input-noise and station-dropout profiles.
-- **Gemini-style voice room preview:** launch a dedicated bilingual voice-assistant interface with an animated audio orb, model status, and scripted sample exchange. It is an explicitly simulated UI: it does not connect to Gemini, capture microphone audio, or return live AI answers.
+- **Gemini Live voice conversation:** start an opt-in English/Japanese audio conversation or send text, with live transcription and spoken responses. It uses a one-use, short-lived, configuration-constrained token; the permanent Gemini API key stays on the server. Requires your own Gemini API key and a secure context (HTTPS; localhost for development). AI responses are not official alerts, predictions, or emergency advice.
 - **Japan preparedness guidance:** an offline curated bilingual answer summarizes earthquake/tsunami basics and Japan's 119 emergency number with links to JMA and Tokyo Fire Department references. It is not dispatch or municipality-specific advice.
 - **Synthetic model-training lab:** generate a deterministic toy feature dataset, train a logistic classifier in the browser, review holdout metrics, and export a JSON report. These synthetic scores do not measure real earthquake-prediction skill.
 - **Consent-based peer location sharing:** optionally share browser coordinates with the paired peer over the existing local WebRTC data channel. Sharing requires an explicit start action and browser permission, can be stopped at any time, and coordinates are not written to app storage.
@@ -51,6 +51,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The Japan-region catalog is fetched through the Next.js server route at `/api/japan-catalog`; the route contacts the USGS past-hour feed. An internet connection is needed for catalog data. If the external feed is unavailable, the dashboard shows an error rather than substituting synthetic events.
 
+### Configure Gemini Live voice
+
+1. Copy `apps/dashboard-ui/.env.example` to `apps/dashboard-ui/.env.local`.
+2. Set `GEMINI_API_KEY` to your own Gemini API key. Keep it server-side; never prefix it with `NEXT_PUBLIC_` or commit `.env.local`.
+3. Optionally set `GEMINI_LIVE_MODEL` to a Live API model enabled for your Google AI Studio project.
+4. Restart the Next.js development server, open the voice room, review the microphone/data notice, and explicitly select **Start conversation**.
+
+The server mints one-use, short-lived tokens constrained to the configured model and safety instructions. Audio and typed messages are sent to Gemini only during an active, user-started session. The in-process token endpoint limit is a development safeguard, not production abuse prevention; a public deployment needs authenticated access and durable rate limiting. Google Live API availability, quotas, model support, and billing depend on the configured account.
+
 ## Install and use the offline communication prototype
 
 1. Open the production deployment over HTTPS while online, then install it from the browser prompt. On iOS/iPadOS, use **Share → Add to Home Screen**. Visit the app once after installation so the service worker caches the shell and static assets.
@@ -65,7 +74,7 @@ This prototype uses local ICE candidates only; it has no STUN/TURN server, accou
 
 The dashboard's training lab generates a reproducible synthetic two-class feature dataset and fits a small logistic classifier locally in the browser. The held-out split and exported JSON report are demonstrations of an ML workflow only; there are no real waveform inputs, trained seismic models, calibration results, or earthquake-prediction capability. Do not interpret its metrics as a probability of an earthquake or use them for warnings or decisions.
 
-The voice room is currently a UI preview only. Gemini Live API is not configured; the sample transcript is scripted, the microphone is not accessed, and no audio or chat content is sent to Google. A live conversational integration would require a secure server-side Gemini Live API session, credential management, user consent, and network access. Do not enter private information into the preview.
+The voice room can connect to Gemini Live after the operator configures a server-side API key. Starting a session requests microphone permission; live audio and any typed messages are streamed to Google and live transcripts/audio responses are rendered in the browser. The backend mints single-use ephemeral tokens constrained to a fixed model, audio-only output, and a safety-focused system instruction; the permanent API key is never returned to the browser. The token route checks same-origin requests and applies a basic per-process request limit, but has no user authentication or durable cross-instance limiter and must not be exposed publicly without those controls. Gemini Live is an external preview service and may be unavailable, change, incur charges, or produce incorrect answers. The assistant is not an official warning channel or earthquake predictor; follow JMA/local-authority instructions and do not use it for emergency decisions. No session transcript is intentionally persisted by the app.
 
 The PWA cannot create Wi-Fi, use Wi-Fi Direct or Bluetooth for calling, or bypass a loss of telephone service. A cellular call to 119 still requires an available telephone network. This prototype is not an emergency dispatch, guaranteed communications, or life-safety service; test it only with non-emergency messages.
 
