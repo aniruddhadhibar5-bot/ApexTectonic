@@ -25,7 +25,10 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **README language-stack inventory:** all 16 language stacks, their intended roles, and honest implementation status are documented in the architecture table below; the dashboard does not render a language-card section.
 - **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
 - **Synthetic Nankai training exercise:** replay, pause, reset, and scrub a fictional signal-review sequence; select generated input-noise and station-dropout profiles.
-- **Bilingual research guide:** switch the interface between English and Japanese, browse cited JMA, USGS, and NIED Hi-net documentation, and ask supported questions of an offline, curated answer guide.
+- **Bilingual voice assistant:** ask supported questions by speaking English or Japanese, then play the cited answer with the browser's speech synthesis. The answer set remains curated and is not a generative AI model.
+- **Japan preparedness guidance:** an offline curated bilingual answer summarizes earthquake/tsunami basics and Japan's 119 emergency number with links to JMA and Tokyo Fire Department references. It is not dispatch or municipality-specific advice.
+- **Synthetic model-training lab:** generate a deterministic toy feature dataset, train a logistic classifier in the browser, review holdout metrics, and export a JSON report. These synthetic scores do not measure real earthquake-prediction skill.
+- **Consent-based peer location sharing:** optionally share browser coordinates with the paired peer over the existing local WebRTC data channel. Sharing requires an explicit start action and browser permission, can be stopped at any time, and coordinates are not written to app storage.
 - **Local-only message previews:** inspect mock mobile, web, watch, and signage presentations. These are never sent.
 - **Polyglot engineering examples:** explore bounded examples and starter modules for sensor framing, DSP, asynchronous inference, scientific modeling, and review eligibility.
 
@@ -54,8 +57,15 @@ Open [http://localhost:3000](http://localhost:3000). The Japan-region catalog is
 2. With the internet unavailable, put both devices on the same functioning Wi-Fi or personal hotspot. Each device must have opened the app online and cached it first.
 3. Device A selects **Create invite** and shares the generated code with Device B through a private, out-of-band method. Device B pastes it and selects **Accept invite · create response**. Device A pastes the response and selects **Apply peer response**.
 4. Once connected, messages travel directly over a WebRTC data channel. Unpaired notes remain local to the device. Both peers select **Start voice call** and grant microphone access to send two-way audio.
+5. To share location, select **Share my location** while paired and grant the browser's location permission. Coordinates are sent only to that peer on the local connection, displayed transiently, and cleared when sharing stops or the peer disconnects. Either user can stop sharing; the app does not persist location history.
 
-This prototype uses local ICE candidates only; it has no STUN/TURN server, account, cloud signaling, identity verification, or relay. Pairing may fail if the Wi-Fi network blocks peer-to-peer traffic, the router isolates clients, or the browser cannot resolve local candidates. Both devices need a secure browser context (HTTPS; localhost is suitable for development). Sharing a pairing code grants the recipient a chance to join that room—share it only with the intended peer. Local notes are stored unencrypted in browser storage; do not use them for secrets, and clear history on shared devices.
+This prototype uses local ICE candidates only; it has no STUN/TURN server, account, cloud signaling, identity verification, or relay. Pairing may fail if the Wi-Fi network blocks peer-to-peer traffic, the router isolates clients, or the browser cannot resolve local candidates. Both devices need a secure browser context (HTTPS; localhost is suitable for development). Browser geolocation also requires a secure context and explicit permission. Sharing a pairing code grants the recipient a chance to join that room and receive opted-in location—share it only with the intended peer. Local notes are stored unencrypted in browser storage; do not use them for secrets, and clear history on shared devices.
+
+### Offline model-training lab
+
+The dashboard's training lab generates a reproducible synthetic two-class feature dataset and fits a small logistic classifier locally in the browser. The held-out split and exported JSON report are demonstrations of an ML workflow only; there are no real waveform inputs, trained seismic models, calibration results, or earthquake-prediction capability. Do not interpret its metrics as a probability of an earthquake or use them for warnings or decisions.
+
+Voice input and output depend on browser speech APIs and installed language voices. Speech recognition may use a browser/vendor service and may require internet access; audio processing and retention are governed by that provider. Hyperion does not store microphone audio. Typing remains available offline, and spoken playback is started only by the user.
 
 The PWA cannot create Wi-Fi, use Wi-Fi Direct or Bluetooth for calling, or bypass a loss of telephone service. A cellular call to 119 still requires an available telephone network. This prototype is not an emergency dispatch, guaranteed communications, or life-safety service; test it only with non-emergency messages.
 

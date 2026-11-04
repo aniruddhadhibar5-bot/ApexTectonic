@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import OfflineComms from "./offline-comms";
+import TrainingLab from "./training-lab";
 
 type Locale = "en-US" | "ja-JP";
 type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
@@ -25,7 +26,30 @@ type CatalogState = {
   fetchedAt: number | null;
   feedGeneratedAt: number | null;
 };
-type ResearchQuestion = "prediction" | "catalog" | "warning" | "data";
+type ResearchQuestion = "preparedness" | "prediction" | "catalog" | "warning" | "data";
+type VoiceResult = { transcript: string };
+type VoiceRecognitionResult = ArrayLike<VoiceResult> & { isFinal: boolean };
+type VoiceRecognitionEvent = Event & { resultIndex: number; results: ArrayLike<VoiceRecognitionResult> };
+type VoiceRecognitionErrorEvent = Event & { error: string };
+interface BrowserSpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: VoiceRecognitionEvent) => void) | null;
+  onerror: ((event: VoiceRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => BrowserSpeechRecognition;
+    webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+  }
+}
 
 const sourceReferences = [
   { id: "jma-eew", url: "https://www.jma.go.jp/jma/en/Activities/eew1.html" },
@@ -33,11 +57,14 @@ const sourceReferences = [
   { id: "usgs-feed", url: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/" },
   { id: "usgs-api", url: "https://earthquake.usgs.gov/fdsnws/event/1/" },
   { id: "hinet-terms", url: "https://www.hinet.bosai.go.jp/about_data/?LANG=en" },
+  { id: "jma-earthquake", url: "https://www.jma.go.jp/jma/en/Activities/earthquake.html" },
+  { id: "tokyo-119", url: "https://www.tfd.metro.tokyo.lg.jp/lfe/119/index.html" },
 ] as const;
 type SourceId = (typeof sourceReferences)[number]["id"];
 const sourceLibraryIds = ["jma-eew", "jma-limits", "usgs-feed", "hinet-terms"] as const;
 
 const answerSources: Record<ResearchQuestion, readonly SourceId[]> = {
+  preparedness: ["jma-earthquake", "tokyo-119"],
   prediction: ["jma-eew", "jma-limits"],
   catalog: ["usgs-feed", "usgs-api"],
   warning: ["jma-eew", "jma-limits"],
@@ -175,6 +202,7 @@ function parseCatalogPayload(value: unknown): {
 
 function identifyQuestion(question: string): ResearchQuestion | null {
   const normalized = question.toLocaleLowerCase();
+  if (/prepare|safety|what (?:should|do) i do|what to do|during (?:an? )?earthquake|in an earthquake|shaking|tsunami|evacuat|shelter|emergency|119|防災|避難|津波|揺れ|安全|救急|119番|地震が起きた時|地震が起きたとき|地震発生時|地震の時|地震のとき/.test(normalized)) return "preparedness";
   if (/predict|prediction|forecast|次の地震|予測|いつ地震/.test(normalized)) return "prediction";
   if (/official|warning|alert|eew|jma|公式|警報|気象庁/.test(normalized)) return "warning";
   if (/research|data|waveform|hi-net|hinet|研究|データ|波形|利用/.test(normalized)) return "data";
@@ -270,7 +298,7 @@ const copy = {
       "Model estimates require independent validation and authorized human review. This interface cannot issue evacuation guidance or operate physical infrastructure.",
     online: "DEMO MODE",
     dimensions: ["Integrity", "Coverage", "Latency", "Quality", "Resilience"],
-    nav: ["Overview", "Event catalog", "About", "How it works", "Prefectures", "Updates", "Offline app", "Research guide", "Sources"],
+    nav: ["Overview", "Event catalog", "About", "How it works", "Prefectures", "Updates", "Offline app", "AI assistant", "ML lab", "Sources"],
     catalogEyebrow: "EXTERNAL CATALOG • OBSERVED EVENTS",
     catalogTitle: "Recent events near Japan",
     catalogDescription:
@@ -316,14 +344,15 @@ const copy = {
       "The 119 link opens your phone app but cannot place or dispatch an emergency call. The peer room below supports non-emergency text and voice only when both devices already share a working local Wi-Fi/hotspot; it cannot reach emergency services.",
     offlineCommsTip:
       "A browser page cannot create a radio network or bypass a loss of telephone service. Check local authority guidance and your device/provider emergency-call capabilities.",
-    assistantEyebrow: "AI ASSISTANCE • CURATED RESEARCH MODE",
-    assistantTitle: "Seismic research guide",
+    assistantEyebrow: "OFFLINE ASSISTANCE • CURATED SAFETY & RESEARCH",
+    assistantTitle: "Japan safety & research guide",
     assistantMode: "CURATED / OFFLINE",
     assistantDescription:
-      "Citation-grounded answers from a small reviewed knowledge base. No generative model is connected; the assistant does not analyze waveforms or predict earthquakes.",
-    assistantPlaceholder: "Ask about prediction, catalog data, official warnings, or research access…",
+      "Bilingual, offline-first guidance for earthquake basics, tsunami readiness, Japan's 119 number, official warning sources, and research. Answers are curated—not generated, location-aware, or a replacement for local authorities.",
+    assistantPlaceholder: "Ask about earthquake safety, tsunami, 119, predictions, or official information…",
     ask: "Ask",
     suggestedQuestions: {
+      preparedness: "What should I do during an earthquake in Japan?",
       prediction: "Can this predict the next earthquake?",
       catalog: "What does the live catalog show?",
       warning: "Is this Japan's official warning?",
@@ -331,7 +360,21 @@ const copy = {
     },
     assistantFallback:
       "I can answer only the listed, source-backed topics in this offline guide. Try one of the suggested questions below.",
+    voiceInput: "Ask by voice",
+    voiceListening: "Listening… tap to stop",
+    voiceSpeak: "Speak answer",
+    voiceStop: "Stop speaking",
+    voicePrivacy:
+      "Voice input uses your browser’s speech-recognition service; support, network use, and audio processing vary by browser. Hyperion does not store audio. Use typed input if voice is unavailable or offline.",
+    voiceUnsupported: "Voice recognition is not available in this browser. You can still type a question.",
+    voiceDenied: "Microphone or speech permission was denied. Check browser permissions, or type your question instead.",
+    voiceNoSpeech: "No speech was detected. Try again or type your question.",
+    voiceError: "Speech recognition failed. Check your microphone and network, or type your question.",
+    voiceOutputUnsupported: "Spoken answers are not available in this browser.",
+    voiceOutputError: "The browser could not play the spoken answer.",
     assistantAnswers: {
+      preparedness:
+        "If shaking starts, Drop, Cover, and Hold On; protect your head and stay away from glass. Do not rush outside or use elevators while shaking. If you are near the coast and experience strong or long-lasting shaking, move to higher ground/inland immediately and follow JMA and local-authority tsunami information—do not wait for this app. For an immediate fire or medical emergency in Japan, call 119 from a working phone. Shelter and evacuation routes depend on your municipality. This guide is offline reference material, not emergency dispatch.",
       prediction:
         "No. This project cannot predict the time, location, and magnitude of a future earthquake, and no system can promise 100% accuracy. Japan's Earthquake Early Warning is issued after an earthquake has started, using observed seismic waves to estimate later shaking. This dashboard makes no prediction.",
       catalog:
@@ -353,6 +396,8 @@ const copy = {
       "usgs-feed": "USGS real-time earthquake feeds",
       "usgs-api": "USGS Earthquake Catalog API",
       "hinet-terms": "Hi-net data access and usage terms",
+      "jma-earthquake": "JMA earthquake information",
+      "tokyo-119": "Tokyo Fire Department: calling 119",
     },
     sourcePublisher: "PUBLISHER",
     sourceLinks: [
@@ -547,7 +592,7 @@ const copy = {
       "モデル推定値には独立した検証と権限を持つ担当者の確認が必要です。避難案内や物理インフラの操作は行いません。",
     online: "デモモード",
     dimensions: ["完全性", "観測範囲", "遅延", "品質", "耐障害性"],
-    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "都道府県", "情報ソース", "オフライン通信", "調査ガイド", "参考資料"],
+    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "都道府県", "情報ソース", "オフライン通信", "防災AI案内", "MLラボ", "参考資料"],
     catalogEyebrow: "外部カタログ • 観測済みイベント",
     catalogTitle: "日本周辺の最近の地震",
     catalogDescription:
@@ -593,14 +638,15 @@ const copy = {
       "119番リンクは電話アプリを開きますが、発信や救急車の手配はできません。下のピアルームは、両端末が動作中の同じWi-Fi/テザリングに接続している場合に限り、緊急用途ではないテキスト・音声通信を行えます。緊急機関には接続されません。",
     offlineCommsTip:
       "ブラウザーだけで無線ネットワークを作ったり、電話回線の障害を回避したりすることはできません。自治体の案内と端末・通信事業者の緊急通報機能をご確認ください。",
-    assistantEyebrow: "AI支援 • 出典付きリサーチモード",
-    assistantTitle: "地震リサーチガイド",
+    assistantEyebrow: "オフライン支援 • 防災・研究ガイド",
+    assistantTitle: "日本の防災・研究ガイド",
     assistantMode: "出典付き / オフライン",
     assistantDescription:
-      "確認済みの小規模な知識ベースに基づく回答です。生成AIは接続されておらず、波形解析や地震予測は行いません。",
-    assistantPlaceholder: "予測、カタログ、公式警報、研究データについて質問…",
+      "地震の基本、津波への備え、日本の119番、公式情報、研究について二言語で案内します。回答は確認済みの定型情報です。生成AI、位置判定、自治体別避難情報は利用しません。",
+    assistantPlaceholder: "地震の安全、津波、119番、予測、公式情報について質問…",
     ask: "質問",
     suggestedQuestions: {
+      preparedness: "日本で地震が起きた時、どうすればよいですか？",
       prediction: "次の地震を予測できますか？",
       catalog: "ライブカタログには何が表示されますか？",
       warning: "これは日本の公式警報ですか？",
@@ -608,7 +654,21 @@ const copy = {
     },
     assistantFallback:
       "このオフラインガイドでは、出典で確認した項目のみ回答できます。下の候補から質問を選択してください。",
+    voiceInput: "音声で質問",
+    voiceListening: "聞き取り中…停止するには再度タップ",
+    voiceSpeak: "回答を音声で再生",
+    voiceStop: "音声を停止",
+    voicePrivacy:
+      "音声入力はブラウザーの音声認識機能を使います。対応状況、通信、音声処理はブラウザーにより異なります。Hyperionは音声を保存しません。音声が使えない場合やオフライン時は文字で入力してください。",
+    voiceUnsupported: "このブラウザーでは音声認識を利用できません。質問を文字で入力できます。",
+    voiceDenied: "マイクまたは音声認識の許可がありません。ブラウザーの権限を確認するか、文字で質問してください。",
+    voiceNoSpeech: "音声を検出できませんでした。再試行するか、文字で質問してください。",
+    voiceError: "音声認識に失敗しました。マイクとネットワークを確認するか、文字で質問してください。",
+    voiceOutputUnsupported: "このブラウザーでは回答の読み上げを利用できません。",
+    voiceOutputError: "ブラウザーで回答を読み上げられませんでした。",
     assistantAnswers: {
+      preparedness:
+        "揺れを感じたら、まず姿勢を低くし、頭を守り、揺れが収まるまで動かないでください。窓ガラスから離れ、揺れている間は外へ駆け出したりエレベーターを使ったりしないでください。海岸付近で強い揺れや長い揺れを感じた場合は、このアプリを待たずに高台・内陸へ避難し、気象庁や自治体の津波情報に従ってください。日本で火災や急病などの緊急事態がある場合は、利用可能な電話から119番へ。避難所や経路は自治体により異なります。このガイドは参考情報であり、緊急通報や救助の手配はできません。",
       prediction:
         "いいえ。このプロジェクトは将来の地震の時刻・場所・規模を予測できず、100%の精度を保証するシステムもありません。日本の緊急地震速報は地震発生後、観測された地震波から後続の揺れを推定して発表されます。この画面は予測を行いません。",
       catalog:
@@ -630,6 +690,8 @@ const copy = {
       "usgs-feed": "USGSリアルタイム地震フィード",
       "usgs-api": "USGS地震カタログAPI",
       "hinet-terms": "Hi-netデータへのアクセスと利用条件",
+      "jma-earthquake": "気象庁：地震情報",
+      "tokyo-119": "東京消防庁：119番通報",
     },
     sourcePublisher: "発行元",
     sourceLinks: [
@@ -1381,11 +1443,15 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantAnswer, setAssistantAnswer] = useState<ResearchQuestion | "fallback" | null>(null);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking] = useState(false);
+  const [voiceMessage, setVoiceMessage] = useState("");
   const [prefectureQuery, setPrefectureQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState<JapanRegion | "all">("all");
   const [selectedPrefectureId, setSelectedPrefectureId] = useState<string>("tokyo");
   const [tourStep, setTourStep] = useState(0);
   const [tourPlaying, setTourPlaying] = useState(false);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const text = copy[locale];
   const filteredPrefectures = japanPrefectures.filter((prefecture) => {
     const query = prefectureQuery.trim().toLocaleLowerCase();
@@ -1480,7 +1546,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    recognitionRef.current?.abort();
+    recognitionRef.current = null;
+    setVoiceListening(false);
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setVoiceSpeaking(false);
   }, [locale]);
+
+  useEffect(() => () => {
+    recognitionRef.current?.abort();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
 
   function runScenario() {
     if (elapsed >= 38) setElapsed(0);
@@ -1492,14 +1568,117 @@ export default function Dashboard() {
     setElapsed(0);
   }
 
+  function answerAssistantQuestion(question: string) {
+    const boundedQuestion = question.slice(0, 200);
+    setAssistantQuery(boundedQuestion);
+    setAssistantAnswer(identifyQuestion(boundedQuestion) ?? "fallback");
+    setVoiceMessage("");
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setVoiceSpeaking(false);
+  }
+
   function askAssistant(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setAssistantAnswer(identifyQuestion(assistantQuery) ?? "fallback");
+    answerAssistantQuestion(assistantQuery);
   }
 
   function chooseQuestion(question: ResearchQuestion) {
-    setAssistantQuery(text.suggestedQuestions[question]);
-    setAssistantAnswer(question);
+    answerAssistantQuestion(text.suggestedQuestions[question]);
+  }
+
+  function toggleVoiceInput() {
+    if (voiceListening) {
+      recognitionRef.current?.stop();
+      setVoiceListening(false);
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!SpeechRecognition || !window.isSecureContext) {
+      setVoiceMessage(text.voiceUnsupported);
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = locale;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .slice(event.resultIndex)
+          .filter((result) => result.isFinal)
+          .map((result) => result[0]?.transcript ?? "")
+          .join(" ")
+          .trim();
+        if (transcript) answerAssistantQuestion(transcript);
+        else setVoiceMessage(text.voiceNoSpeech);
+      };
+      recognition.onerror = (event) => {
+        if (event.error === "aborted") return;
+        setVoiceMessage(
+          event.error === "not-allowed" || event.error === "service-not-allowed"
+            ? text.voiceDenied
+            : event.error === "no-speech"
+              ? text.voiceNoSpeech
+              : text.voiceError,
+        );
+      };
+      recognition.onend = () => {
+        setVoiceListening(false);
+        if (recognitionRef.current === recognition) recognitionRef.current = null;
+      };
+      recognitionRef.current = recognition;
+      setVoiceMessage("");
+      setVoiceListening(true);
+      recognition.start();
+    } catch (recognitionError) {
+      console.error("Could not start browser speech recognition", recognitionError);
+      recognitionRef.current = null;
+      setVoiceListening(false);
+      setVoiceMessage(text.voiceError);
+    }
+  }
+
+  function toggleAssistantSpeech() {
+    if (!("speechSynthesis" in window)) {
+      setVoiceMessage(text.voiceOutputUnsupported);
+      return;
+    }
+    if (voiceSpeaking) {
+      window.speechSynthesis.cancel();
+      setVoiceSpeaking(false);
+      return;
+    }
+    if (assistantAnswer === null) return;
+    const answer = assistantAnswer === "fallback"
+      ? text.assistantFallback
+      : text.assistantAnswers[assistantAnswer];
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(answer);
+      utterance.lang = locale;
+      utterance.rate = 0.95;
+      const languagePrefix = locale.split("-")[0].toLowerCase();
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice =
+        voices.find((voice) => voice.lang.toLowerCase() === locale.toLowerCase()) ??
+        voices.find((voice) => voice.lang.toLowerCase().startsWith(`${languagePrefix}-`)) ??
+        null;
+      utterance.onend = () => setVoiceSpeaking(false);
+      utterance.onerror = (event) => {
+        setVoiceSpeaking(false);
+        if (event.error !== "canceled" && event.error !== "interrupted") {
+          setVoiceMessage(text.voiceOutputError);
+        }
+      };
+      setVoiceMessage("");
+      setVoiceSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    } catch (speechError) {
+      console.error("Could not play browser speech synthesis", speechError);
+      setVoiceSpeaking(false);
+      setVoiceMessage(text.voiceOutputError);
+    }
   }
 
   function refreshCatalog() {
@@ -1540,7 +1719,7 @@ export default function Dashboard() {
         </div>
         <nav className="section-nav" aria-label={text.navLabel}>
           {text.nav.map((item, index) => (
-            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#locations", "#updates", "#offline-comms", "#assistant", "#research"][index]}>{item}</a>
+            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#locations", "#updates", "#offline-comms", "#assistant", "#training-lab", "#research"][index]}>{item}</a>
           ))}
         </nav>
         <div className="header-controls">
@@ -1857,6 +2036,7 @@ export default function Dashboard() {
       </section>
 
       <OfflineComms locale={locale} />
+      <TrainingLab locale={locale} />
 
       <section className="scenario panel">
         <div className="scenario-heading">
@@ -1955,6 +2135,29 @@ export default function Dashboard() {
           />
           <button type="submit">{text.ask}<span aria-hidden="true">↗</span></button>
         </form>
+        <div className="assistant-voice-controls">
+          <button
+            type="button"
+            className={voiceListening ? "voice-button voice-listening" : "voice-button"}
+            onClick={toggleVoiceInput}
+            aria-pressed={voiceListening}
+          >
+            <span aria-hidden="true">{voiceListening ? "■" : "◉"}</span>
+            {voiceListening ? text.voiceListening : text.voiceInput}
+          </button>
+          <button
+            type="button"
+            className="voice-button voice-speak-button"
+            onClick={toggleAssistantSpeech}
+            aria-pressed={voiceSpeaking}
+            disabled={assistantAnswer === null && !voiceSpeaking}
+          >
+            <span aria-hidden="true">{voiceSpeaking ? "■" : "◖))"}</span>
+            {voiceSpeaking ? text.voiceStop : text.voiceSpeak}
+          </button>
+          <p>{text.voicePrivacy}</p>
+        </div>
+        {voiceMessage && <p className="assistant-voice-message" role="status">{voiceMessage}</p>}
         <div className="suggested-questions">
           {(Object.keys(text.suggestedQuestions) as ResearchQuestion[]).map((question) => (
             <button type="button" key={question} onClick={() => chooseQuestion(question)}>

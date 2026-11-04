@@ -12,7 +12,7 @@ Hyperion Core explores how a multilingual, multi-language software prototype can
 2. synthetic inputs and generated visualizations used in a browser exercise; and
 3. official warnings issued by authorized agencies.
 
-The current objective is interface and software experimentation. No model is trained, calibrated, evaluated for earthquake prediction, or connected to field observations in this repository.
+The current objective is interface and software experimentation. The browser now trains a small classifier on generated synthetic feature rows to demonstrate a local ML workflow. No model is trained on real waveforms, calibrated, evaluated for earthquake prediction, or connected to field observations in this repository.
 
 ## 2. System boundary and data flow
 
@@ -33,15 +33,19 @@ Browser-generated exercise input ---> Canvas illustrations
                                       (separate from catalog)
 
 Curated question guide -----------> primary-source links
+Optional browser speech input ----> curated question matcher
+Curated answer -------------------> optional speech synthesis
+Synthetic feature generator ------> browser-local classifier
+                                    (toy data; not a predictor)
 
 Installed PWA shell --------------> browser cache
 Local notes ----------------------> device-local browser storage
 
 Manual offer/answer exchange -----> WebRTC local ICE candidates
-                                    (shared Wi-Fi/hotspot; text + audio)
+                                    (shared Wi-Fi/hotspot; text + audio + opt-in location)
 ```
 
-There is no JMA connection, Hi-net ingestion, gRPC runtime, sensor hardware, machine-learning inference service, emergency-alert delivery, actuator interface, or public message channel. The PWA has a limited local peer-to-peer communication prototype; it is not an emergency service.
+There is no JMA connection, Hi-net ingestion, gRPC runtime, sensor hardware, real-data machine-learning inference service, emergency-alert delivery, actuator interface, or public message channel. The PWA has a limited local peer-to-peer communication prototype; it is not an emergency service.
 
 ## 3. Current language-stack inventory
 
@@ -87,7 +91,13 @@ These points are not sensor coordinates. The prefecture directory does not model
 
 The dashboard’s “updates” area displays real catalog data returned by the existing USGS route, when available, and links to primary public sources. The catalog auto-refreshes every 60 seconds and displays the feed-generation and last-check timestamps. It does not create news headlines, scrape unverified social posts, or claim to aggregate JMA bulletins.
 
-The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Separately, the installed PWA can connect two browsers with manually exchanged WebRTC offer/answer descriptions over a shared, functioning local Wi-Fi/hotspot without an internet connection. It does not create that network, use Wi-Fi Direct/Bluetooth, or provide cellular voice/SMS, satellite, radio/mesh, emergency dispatch, identity verification, or guaranteed delivery. Local notes use unencrypted browser storage. Pairing codes must be shared privately; network/router policy and browser candidate handling may prevent a connection.
+The offline training lab creates a deterministic, synthetic two-class feature dataset and trains a small logistic classifier in the browser. The held-out metrics describe only that generated toy dataset. They are not real-world accuracy, calibration, earthquake probabilities, or evidence of prediction ability. Nothing from this workflow is sent to a service.
+
+Peer location sharing is off by default. After a user explicitly starts sharing and grants browser geolocation permission, coordinates are sent only to the currently paired peer over the existing local WebRTC data channel. Incoming coordinates are range-checked and stale updates expire; local and remote coordinates remain transient in component memory and are not written to local storage. Users can stop sharing, and peer disconnection clears location state. This is not a continuous background tracker or an emergency location service.
+
+The assistant offers optional browser-native English/Japanese speech recognition and speech synthesis for its curated answers. Browser support and installed voices vary. Speech recognition can depend on an external browser/vendor service and may require internet; audio processing and retention follow that provider's policy. Hyperion does not upload or persist microphone audio itself. Typed questions remain available offline, and playback requires an explicit user action. This adds voice I/O, not a generative AI model or unrestricted safety advisor.
+
+The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Separately, the installed PWA can connect two browsers with manually exchanged WebRTC offer/answer descriptions over a shared, functioning local Wi-Fi/hotspot without an internet connection. Opt-in location is visible to the paired peer only while sharing is active and is not retained by the app. It does not create that network, use Wi-Fi Direct/Bluetooth, or provide cellular voice/SMS, satellite, radio/mesh, emergency dispatch, identity verification, or guaranteed delivery. Local notes use unencrypted browser storage. Pairing codes must be shared privately; network/router policy and browser candidate handling may prevent a connection.
 
 ## 6. Research questions and non-claims
 

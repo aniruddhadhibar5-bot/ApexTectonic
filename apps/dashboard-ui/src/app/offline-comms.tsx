@@ -11,6 +11,7 @@ type Message = {
   delivery: "draft" | "sent" | "received";
 };
 type SignalDescription = { type: "offer" | "answer"; sdp: string };
+type PeerLocation = { latitude: number; longitude: number; updatedAt: number };
 type PeerStatus = "idle" | "preparing" | "waiting" | "connecting" | "connected" | "failed";
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
 
@@ -18,6 +19,7 @@ const STORAGE_KEY = "hyperion-offline-messages-v1";
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_SIGNAL_LENGTH = 20000;
 const MAX_WIRE_LENGTH = MAX_MESSAGE_LENGTH * 6 + 100;
+const MAX_LOCATION_AGE_MS = 90_000;
 
 const copy = {
   "en-US": {
@@ -78,6 +80,20 @@ const copy = {
     storageError: "Browser storage is unavailable. Notes may not persist after closing this tab.",
     callDisconnected: "Call ended.",
     characterCount: "characters",
+    locationTitle: "Opt-in live location",
+    locationNote: "Sharing is off by default. When you start it, your browser asks permission and sends coordinates only to this paired peer. Hyperion does not save coordinates. Share only with someone you trust; stop at any time.",
+    locationStart: "Share my location",
+    locationStop: "Stop sharing",
+    locationOff: "Location sharing is off",
+    locationOn: "Sharing live location with this peer",
+    locationLocal: "Your location",
+    locationPeer: "Peer location",
+    locationWaiting: "Waiting for a location update…",
+    locationNeedsPeer: "Pair with a peer before sharing location.",
+    locationUnsupported: "Location requires a secure browser context and location permission.",
+    locationDenied: "Location permission was denied. Allow it in your browser settings and try again.",
+    locationFailed: "Could not read or share location. Check device location settings and the peer connection.",
+    locationUnavailable: "Location is unavailable",
   },
   "ja-JP": {
     eyebrow: "ローカル優先通信 / クラウド中継なし",
@@ -137,6 +153,20 @@ const copy = {
     storageError: "ブラウザーの保存領域を利用できません。タブを閉じるとメモが消える場合があります。",
     callDisconnected: "通話を終了しました。",
     characterCount: "文字",
+    locationTitle: "同意制・リアルタイム位置共有",
+    locationNote: "位置共有は初期状態でオフです。開始するとブラウザーが許可を求め、座標はペアリング済みの相手にのみ送信されます。Hyperionは座標を保存しません。信頼できる相手とのみ共有し、いつでも停止してください。",
+    locationStart: "現在地を共有",
+    locationStop: "共有を停止",
+    locationOff: "位置情報は共有していません",
+    locationOn: "この相手に現在地を共有中",
+    locationLocal: "あなたの位置",
+    locationPeer: "相手の位置",
+    locationWaiting: "位置情報の更新を待っています…",
+    locationNeedsPeer: "位置情報を共有する前に相手とペアリングしてください。",
+    locationUnsupported: "位置情報には安全なブラウザー環境と位置情報の許可が必要です。",
+    locationDenied: "位置情報の利用が拒否されました。ブラウザー設定で許可して再試行してください。",
+    locationFailed: "位置情報を取得または共有できません。端末の位置設定と相手との接続を確認してください。",
+    locationUnavailable: "位置情報を利用できません",
   },
 } as const;
 
@@ -148,6 +178,25 @@ function isSignalDescription(value: unknown): value is SignalDescription {
     typeof signal.sdp === "string" &&
     signal.sdp.length > 0 &&
     signal.sdp.length <= MAX_SIGNAL_LENGTH
+  );
+}
+
+function isPeerLocation(value: unknown): value is PeerLocation {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "latitude" in value &&
+    typeof value.latitude === "number" &&
+    Number.isFinite(value.latitude) &&
+    value.latitude >= -90 &&
+    value.latitude <= 90 &&
+    "longitude" in value &&
+    typeof value.longitude === "number" &&
+    Number.isFinite(value.longitude) &&
+    value.longitude >= -180 &&
+    value.longitude <= 180 &&
+    "updatedAt" in value &&
+    typeof value.updatedAt === "number" &&
+    Number.isFinite(value.updatedAt)
   );
 }
 
@@ -182,12 +231,17 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
   const [appInstalled, setAppInstalled] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
   const [callActive, setCallActive] = useState(false);
+  const [sharingLocation, setSharingLocation] = useState(false);
+  const [localLocation, setLocalLocation] = useState<PeerLocation | null>(null);
+  const [remoteLocation, setRemoteLocation] = useState<PeerLocation | null>(null);
   const [error, setError] = useState("");
   const [storageAvailable, setStorageAvailable] = useState(true);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
   const audioSenderRef = useRef<RTCRtpSender | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const locationWatchRef = useRef<number | null>(null);
+  const locationSharingRef = useRef(false);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const installPromptRef = useRef<InstallPrompt | null>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
@@ -218,7 +272,65 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
     }
   }, []);
 
+  const handlePeerData = useCallback((data: unknown) => {
+    if (typeof data !== "string" || data.length > MAX_WIRE_LENGTH) return;
+    try {
+      const incoming: unknown = JSON.parse(data);
+      if (typeof incoming !== "object" || incoming === null || !("type" in incoming)) return;
+      if (
+        incoming.type === "hyperion-text" &&
+        "body" in incoming &&
+        typeof incoming.body === "string" &&
+        incoming.body.length > 0 &&
+        incoming.body.length <= MAX_MESSAGE_LENGTH
+      ) {
+        appendMessage({
+          id: crypto.randomUUID(),
+          body: incoming.body,
+          createdAt: Date.now(),
+          direction: "remote",
+          delivery: "received",
+        });
+      } else if (
+        incoming.type === "hyperion-location" &&
+        "location" in incoming &&
+        isPeerLocation(incoming.location)
+      ) {
+        const now = Date.now();
+        if (incoming.location.updatedAt <= now + 30_000 && now - incoming.location.updatedAt <= MAX_LOCATION_AGE_MS) {
+          setRemoteLocation(incoming.location);
+        }
+      } else if (incoming.type === "hyperion-location-stop") {
+        setRemoteLocation(null);
+      }
+    } catch (parseError) {
+      console.error("Ignored malformed peer message", parseError);
+    }
+  }, [appendMessage]);
+
+  const stopLocationSharing = useCallback((notifyPeer = true) => {
+    locationSharingRef.current = false;
+    if (locationWatchRef.current !== null && "geolocation" in navigator) {
+      navigator.geolocation.clearWatch(locationWatchRef.current);
+      locationWatchRef.current = null;
+    }
+    if (notifyPeer && channelRef.current?.readyState === "open") {
+      try {
+        channelRef.current.send(JSON.stringify({ type: "hyperion-location-stop" }));
+      } catch (sendError) {
+        console.error("Could not send peer location stop message", sendError);
+      }
+    }
+    setSharingLocation(false);
+    setLocalLocation(null);
+  }, []);
+
   const closePeer = useCallback(() => {
+    locationSharingRef.current = false;
+    if (locationWatchRef.current !== null && "geolocation" in navigator) {
+      navigator.geolocation.clearWatch(locationWatchRef.current);
+      locationWatchRef.current = null;
+    }
     channelRef.current?.close();
     channelRef.current = null;
     peerRef.current?.close();
@@ -227,6 +339,9 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
     setCallActive(false);
+    setSharingLocation(false);
+    setLocalLocation(null);
+    setRemoteLocation(null);
   }, []);
 
   const configurePeer = useCallback((peer: RTCPeerConnection) => {
@@ -237,6 +352,8 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
         setError("");
       } else if (peer.connectionState === "failed" || peer.connectionState === "closed") {
         setPeerStatus("failed");
+        stopLocationSharing(false);
+        setRemoteLocation(null);
         localStreamRef.current?.getTracks().forEach((track) => track.stop());
         localStreamRef.current = null;
         setCallActive(false);
@@ -251,34 +368,13 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
         setError("");
       };
       event.channel.onclose = () => {
-        if (peer.connectionState !== "closed") setPeerStatus("failed");
-      };
-      event.channel.onmessage = (messageEvent) => {
-        if (typeof messageEvent.data !== "string" || messageEvent.data.length > MAX_WIRE_LENGTH) return;
-        try {
-          const incoming: unknown = JSON.parse(messageEvent.data);
-          if (
-            typeof incoming === "object" &&
-            incoming !== null &&
-            "type" in incoming &&
-            incoming.type === "hyperion-text" &&
-            "body" in incoming &&
-            typeof incoming.body === "string" &&
-            incoming.body.length > 0 &&
-            incoming.body.length <= MAX_MESSAGE_LENGTH
-          ) {
-            appendMessage({
-              id: crypto.randomUUID(),
-              body: incoming.body,
-              createdAt: Date.now(),
-              direction: "remote",
-              delivery: "received",
-            });
-          }
-        } catch (parseError) {
-          console.error("Ignored malformed peer message", parseError);
+        if (peer.connectionState !== "closed") {
+          setPeerStatus("failed");
+          stopLocationSharing(false);
+          setRemoteLocation(null);
         }
       };
+      event.channel.onmessage = (messageEvent) => handlePeerData(messageEvent.data);
     };
     peer.ontrack = (event) => {
       const audio = remoteAudioRef.current;
@@ -295,7 +391,7 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
         setError(text.signalError);
       }
     };
-  }, [appendMessage, text.audioNote, text.signalError]);
+  }, [handlePeerData, stopLocationSharing, text.audioNote, text.signalError]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -360,6 +456,13 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
     messageListRef.current?.scrollTo({ top: messageListRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (!remoteLocation) return;
+    const expiresIn = Math.max(0, remoteLocation.updatedAt + MAX_LOCATION_AGE_MS - Date.now());
+    const timeout = window.setTimeout(() => setRemoteLocation(null), expiresIn);
+    return () => window.clearTimeout(timeout);
+  }, [remoteLocation]);
+
   async function installApp() {
     const prompt = installPromptRef.current;
     if (!prompt) return;
@@ -397,28 +500,13 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
         setError("");
       };
       channel.onclose = () => {
-        if (peer.connectionState !== "closed") setPeerStatus("failed");
-      };
-      channel.onmessage = (event) => {
-        if (typeof event.data !== "string" || event.data.length > MAX_WIRE_LENGTH) return;
-        try {
-          const incoming: unknown = JSON.parse(event.data);
-          if (
-            typeof incoming === "object" &&
-            incoming !== null &&
-            "type" in incoming &&
-            incoming.type === "hyperion-text" &&
-            "body" in incoming &&
-            typeof incoming.body === "string" &&
-            incoming.body.length > 0 &&
-            incoming.body.length <= MAX_MESSAGE_LENGTH
-          ) {
-            appendMessage({ id: crypto.randomUUID(), body: incoming.body, createdAt: Date.now(), direction: "remote", delivery: "received" });
-          }
-        } catch (parseError) {
-          console.error("Ignored malformed peer message", parseError);
+        if (peer.connectionState !== "closed") {
+          setPeerStatus("failed");
+          stopLocationSharing(false);
+          setRemoteLocation(null);
         }
       };
+      channel.onmessage = (event) => handlePeerData(event.data);
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
       await waitForIceGathering(peer);
@@ -513,6 +601,57 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
       if (shareError instanceof DOMException && shareError.name === "AbortError") return;
       console.error("Could not share the peer pairing code", shareError);
       setError(text.invalidSignal);
+    }
+  }
+
+  function startLocationSharing() {
+    setError("");
+    if (peerStatus !== "connected" || channelRef.current?.readyState !== "open") {
+      setError(text.locationNeedsPeer);
+      return;
+    }
+    if (!window.isSecureContext || !("geolocation" in navigator)) {
+      setError(text.locationUnsupported);
+      return;
+    }
+    try {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          if (!locationSharingRef.current) return;
+          const location: PeerLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            updatedAt: position.timestamp,
+          };
+          const channel = channelRef.current;
+          if (!channel || channel.readyState !== "open") {
+            stopLocationSharing(false);
+            setError(text.locationNeedsPeer);
+            return;
+          }
+          try {
+            channel.send(JSON.stringify({ type: "hyperion-location", location }));
+            setLocalLocation(location);
+            setError("");
+          } catch (sendError) {
+            console.error("Could not share live location with peer", sendError);
+            stopLocationSharing(false);
+            setError(text.locationFailed);
+          }
+        },
+        (locationError) => {
+          stopLocationSharing(false);
+          setError(locationError.code === 1 ? text.locationDenied : text.locationFailed);
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+      );
+      locationWatchRef.current = watchId;
+      locationSharingRef.current = true;
+      setSharingLocation(true);
+    } catch (locationError) {
+      locationSharingRef.current = false;
+      console.error("Could not start browser location watch", locationError);
+      setError(text.locationFailed);
     }
   }
 
@@ -658,6 +797,37 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
               <button type="button" className="copy-signal-button" onClick={copySignalCode}>{text.copyCode}</button>
             </div>
           )}
+          <div className="peer-location-panel">
+            <div className="offline-panel-heading">
+              <div><p className="safety-card-label">{text.locationTitle}</p><h3>{sharingLocation ? text.locationOn : text.locationOff}</h3></div>
+              <span className={`peer-status-indicator ${sharingLocation ? "peer-connected" : ""}`} />
+            </div>
+            <p className="peer-help-text">{text.locationNote}</p>
+            <button
+              type="button"
+              className={sharingLocation ? "hangup-call-button" : "start-call-button"}
+              onClick={sharingLocation ? () => stopLocationSharing() : startLocationSharing}
+              disabled={!connected}
+              aria-pressed={sharingLocation}
+            >
+              {sharingLocation ? text.locationStop : text.locationStart}
+            </button>
+            {sharingLocation && (
+              <p className="peer-location-coordinate" aria-live="polite">
+                {text.locationLocal}: {localLocation
+                  ? `${localLocation.latitude.toFixed(4)}, ${localLocation.longitude.toFixed(4)}`
+                  : text.locationWaiting}
+              </p>
+            )}
+            {remoteLocation && (
+              <p className="peer-location-coordinate" aria-live="polite">
+                {text.locationPeer}: {remoteLocation.latitude.toFixed(4)}, {remoteLocation.longitude.toFixed(4)}
+                <time dateTime={new Date(remoteLocation.updatedAt).toISOString()}>
+                  {new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(remoteLocation.updatedAt)}
+                </time>
+              </p>
+            )}
+          </div>
           {connected && (
             <div className="peer-connected-note">
               <p>{text.peerConnected}</p>
