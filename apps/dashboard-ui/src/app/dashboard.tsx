@@ -4,9 +4,10 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type Locale = "en-US" | "ja-JP";
-type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient";
+type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
 type PreviewChannel = "mobile" | "web" | "watch" | "signage";
 type DrillProfile = "baseline" | "noise" | "dropout";
+type JapanRegion = "Hokkaido" | "Tohoku" | "Kanto" | "Chubu" | "Kansai" | "Chugoku" | "Shikoku" | "Kyushu & Okinawa";
 type CatalogEvent = {
   id: string;
   magnitude: number;
@@ -41,6 +42,86 @@ const answerSources: Record<ResearchQuestion, readonly SourceId[]> = {
   warning: ["jma-eew", "jma-limits"],
   data: ["hinet-terms"],
 };
+
+const japanRegions: ReadonlyArray<{ en: JapanRegion; ja: string }> = [
+  { en: "Hokkaido", ja: "北海道" },
+  { en: "Tohoku", ja: "東北" },
+  { en: "Kanto", ja: "関東" },
+  { en: "Chubu", ja: "中部" },
+  { en: "Kansai", ja: "関西" },
+  { en: "Chugoku", ja: "中国" },
+  { en: "Shikoku", ja: "四国" },
+  { en: "Kyushu & Okinawa", ja: "九州・沖縄" },
+];
+
+const japanPrefectures = [
+  { id: "hokkaido", en: "Hokkaido", ja: "北海道", capitalEn: "Sapporo", capitalJa: "札幌市", region: "Hokkaido", lat: 43.0621, lon: 141.3544 },
+  { id: "aomori", en: "Aomori", ja: "青森県", capitalEn: "Aomori", capitalJa: "青森市", region: "Tohoku", lat: 40.8222, lon: 140.7474 },
+  { id: "iwate", en: "Iwate", ja: "岩手県", capitalEn: "Morioka", capitalJa: "盛岡市", region: "Tohoku", lat: 39.7036, lon: 141.1527 },
+  { id: "miyagi", en: "Miyagi", ja: "宮城県", capitalEn: "Sendai", capitalJa: "仙台市", region: "Tohoku", lat: 38.2682, lon: 140.8694 },
+  { id: "akita", en: "Akita", ja: "秋田県", capitalEn: "Akita", capitalJa: "秋田市", region: "Tohoku", lat: 39.7199, lon: 140.1026 },
+  { id: "yamagata", en: "Yamagata", ja: "山形県", capitalEn: "Yamagata", capitalJa: "山形市", region: "Tohoku", lat: 38.2554, lon: 140.3396 },
+  { id: "fukushima", en: "Fukushima", ja: "福島県", capitalEn: "Fukushima", capitalJa: "福島市", region: "Tohoku", lat: 37.7503, lon: 140.4676 },
+  { id: "ibaraki", en: "Ibaraki", ja: "茨城県", capitalEn: "Mito", capitalJa: "水戸市", region: "Kanto", lat: 36.3659, lon: 140.4712 },
+  { id: "tochigi", en: "Tochigi", ja: "栃木県", capitalEn: "Utsunomiya", capitalJa: "宇都宮市", region: "Kanto", lat: 36.5551, lon: 139.8828 },
+  { id: "gunma", en: "Gunma", ja: "群馬県", capitalEn: "Maebashi", capitalJa: "前橋市", region: "Kanto", lat: 36.3895, lon: 139.0634 },
+  { id: "saitama", en: "Saitama", ja: "埼玉県", capitalEn: "Saitama", capitalJa: "さいたま市", region: "Kanto", lat: 35.8617, lon: 139.6455 },
+  { id: "chiba", en: "Chiba", ja: "千葉県", capitalEn: "Chiba", capitalJa: "千葉市", region: "Kanto", lat: 35.6073, lon: 140.1063 },
+  { id: "tokyo", en: "Tokyo", ja: "東京都", capitalEn: "Shinjuku", capitalJa: "新宿区", region: "Kanto", lat: 35.6938, lon: 139.7034 },
+  { id: "kanagawa", en: "Kanagawa", ja: "神奈川県", capitalEn: "Yokohama", capitalJa: "横浜市", region: "Kanto", lat: 35.4437, lon: 139.6380 },
+  { id: "niigata", en: "Niigata", ja: "新潟県", capitalEn: "Niigata", capitalJa: "新潟市", region: "Chubu", lat: 37.9161, lon: 139.0364 },
+  { id: "toyama", en: "Toyama", ja: "富山県", capitalEn: "Toyama", capitalJa: "富山市", region: "Chubu", lat: 36.6953, lon: 137.2113 },
+  { id: "ishikawa", en: "Ishikawa", ja: "石川県", capitalEn: "Kanazawa", capitalJa: "金沢市", region: "Chubu", lat: 36.5613, lon: 136.6562 },
+  { id: "fukui", en: "Fukui", ja: "福井県", capitalEn: "Fukui", capitalJa: "福井市", region: "Chubu", lat: 36.0641, lon: 136.2196 },
+  { id: "yamanashi", en: "Yamanashi", ja: "山梨県", capitalEn: "Kofu", capitalJa: "甲府市", region: "Chubu", lat: 35.6642, lon: 138.5684 },
+  { id: "nagano", en: "Nagano", ja: "長野県", capitalEn: "Nagano", capitalJa: "長野市", region: "Chubu", lat: 36.6513, lon: 138.1810 },
+  { id: "gifu", en: "Gifu", ja: "岐阜県", capitalEn: "Gifu", capitalJa: "岐阜市", region: "Chubu", lat: 35.4233, lon: 136.7607 },
+  { id: "shizuoka", en: "Shizuoka", ja: "静岡県", capitalEn: "Shizuoka", capitalJa: "静岡市", region: "Chubu", lat: 34.9756, lon: 138.3828 },
+  { id: "aichi", en: "Aichi", ja: "愛知県", capitalEn: "Nagoya", capitalJa: "名古屋市", region: "Chubu", lat: 35.1815, lon: 136.9066 },
+  { id: "mie", en: "Mie", ja: "三重県", capitalEn: "Tsu", capitalJa: "津市", region: "Kansai", lat: 34.7303, lon: 136.5086 },
+  { id: "shiga", en: "Shiga", ja: "滋賀県", capitalEn: "Otsu", capitalJa: "大津市", region: "Kansai", lat: 35.0179, lon: 135.8546 },
+  { id: "kyoto", en: "Kyoto", ja: "京都府", capitalEn: "Kyoto", capitalJa: "京都市", region: "Kansai", lat: 35.0116, lon: 135.7681 },
+  { id: "osaka", en: "Osaka", ja: "大阪府", capitalEn: "Osaka", capitalJa: "大阪市", region: "Kansai", lat: 34.6937, lon: 135.5023 },
+  { id: "hyogo", en: "Hyogo", ja: "兵庫県", capitalEn: "Kobe", capitalJa: "神戸市", region: "Kansai", lat: 34.6901, lon: 135.1956 },
+  { id: "nara", en: "Nara", ja: "奈良県", capitalEn: "Nara", capitalJa: "奈良市", region: "Kansai", lat: 34.6851, lon: 135.8050 },
+  { id: "wakayama", en: "Wakayama", ja: "和歌山県", capitalEn: "Wakayama", capitalJa: "和歌山市", region: "Kansai", lat: 34.2305, lon: 135.1708 },
+  { id: "tottori", en: "Tottori", ja: "鳥取県", capitalEn: "Tottori", capitalJa: "鳥取市", region: "Chugoku", lat: 35.5011, lon: 134.2351 },
+  { id: "shimane", en: "Shimane", ja: "島根県", capitalEn: "Matsue", capitalJa: "松江市", region: "Chugoku", lat: 35.4681, lon: 133.0484 },
+  { id: "okayama", en: "Okayama", ja: "岡山県", capitalEn: "Okayama", capitalJa: "岡山市", region: "Chugoku", lat: 34.6551, lon: 133.9195 },
+  { id: "hiroshima", en: "Hiroshima", ja: "広島県", capitalEn: "Hiroshima", capitalJa: "広島市", region: "Chugoku", lat: 34.3853, lon: 132.4553 },
+  { id: "yamaguchi", en: "Yamaguchi", ja: "山口県", capitalEn: "Yamaguchi", capitalJa: "山口市", region: "Chugoku", lat: 34.1785, lon: 131.4737 },
+  { id: "tokushima", en: "Tokushima", ja: "徳島県", capitalEn: "Tokushima", capitalJa: "徳島市", region: "Shikoku", lat: 34.0703, lon: 134.5548 },
+  { id: "kagawa", en: "Kagawa", ja: "香川県", capitalEn: "Takamatsu", capitalJa: "高松市", region: "Shikoku", lat: 34.3428, lon: 134.0466 },
+  { id: "ehime", en: "Ehime", ja: "愛媛県", capitalEn: "Matsuyama", capitalJa: "松山市", region: "Shikoku", lat: 33.8416, lon: 132.7657 },
+  { id: "kochi", en: "Kochi", ja: "高知県", capitalEn: "Kochi", capitalJa: "高知市", region: "Shikoku", lat: 33.5597, lon: 133.5311 },
+  { id: "fukuoka", en: "Fukuoka", ja: "福岡県", capitalEn: "Fukuoka", capitalJa: "福岡市", region: "Kyushu & Okinawa", lat: 33.5902, lon: 130.4017 },
+  { id: "saga", en: "Saga", ja: "佐賀県", capitalEn: "Saga", capitalJa: "佐賀市", region: "Kyushu & Okinawa", lat: 33.2494, lon: 130.2988 },
+  { id: "nagasaki", en: "Nagasaki", ja: "長崎県", capitalEn: "Nagasaki", capitalJa: "長崎市", region: "Kyushu & Okinawa", lat: 32.7503, lon: 129.8777 },
+  { id: "kumamoto", en: "Kumamoto", ja: "熊本県", capitalEn: "Kumamoto", capitalJa: "熊本市", region: "Kyushu & Okinawa", lat: 32.8031, lon: 130.7079 },
+  { id: "oita", en: "Oita", ja: "大分県", capitalEn: "Oita", capitalJa: "大分市", region: "Kyushu & Okinawa", lat: 33.2396, lon: 131.6093 },
+  { id: "miyazaki", en: "Miyazaki", ja: "宮崎県", capitalEn: "Miyazaki", capitalJa: "宮崎市", region: "Kyushu & Okinawa", lat: 31.9077, lon: 131.4202 },
+  { id: "kagoshima", en: "Kagoshima", ja: "鹿児島県", capitalEn: "Kagoshima", capitalJa: "鹿児島市", region: "Kyushu & Okinawa", lat: 31.5966, lon: 130.5571 },
+  { id: "okinawa", en: "Okinawa", ja: "沖縄県", capitalEn: "Naha", capitalJa: "那覇市", region: "Kyushu & Okinawa", lat: 26.2124, lon: 127.6809 },
+] as const;
+
+const languageStacks = [
+  { name: "Rust", area: "Edge packet authentication", areaJa: "エッジパケット認証", path: "services/edge-sensor/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "Zig", area: "Bounded frame decoder", areaJa: "上限付きフレームデコーダー", path: "services/zig-kernel-driver/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "C++20", area: "Scalar DSP filters and FFT", areaJa: "スカラーDSPフィルターとFFT", path: "services/dsp-engine/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "Julia", area: "Dimensionless diffusion model", areaJa: "無次元拡散モデル", path: "services/julian-tectonics/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "Python", area: "Async inference adapter", areaJa: "非同期推論アダプター", path: "services/ai-core/", status: "Adapter only; no trained model", statusJa: "アダプターのみ・学習済みモデルなし" },
+  { name: "Haskell", area: "Review eligibility rules", areaJa: "レビュー適格性ルール", path: "services/verifier/", status: "Review checks; not a proof", statusJa: "レビュー判定・安全証明ではありません" },
+  { name: "Go", area: "Ingestion routing example", areaJa: "取り込みルーティング例", path: "services/ingestion-mesh/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "Elixir", area: "OTP telemetry broker concept", areaJa: "OTPテレメトリーブローカー案", path: "services/telemetry-mesh/", status: "Planned; no service scaffold", statusJa: "計画段階・未実装" },
+  { name: "Java", area: "Human review queue", areaJa: "担当者レビューキュー", path: "services/infrastructure-orchestrator/", status: "Queue stub; no actuators", statusJa: "キュー例・制御機能なし" },
+  { name: "R", area: "Regional statistical example", areaJa: "地域統計の例", path: "services/analytics-r/", status: "Example implemented", statusJa: "実装例あり" },
+  { name: "PHP", area: "Admin portal entry point", areaJa: "管理ポータルのエントリー", path: "services/admin-portal/", status: "Minimal scaffold", statusJa: "最小構成" },
+  { name: "TypeScript", area: "Bilingual Next.js dashboard", areaJa: "二言語Next.jsダッシュボード", path: "apps/dashboard-ui/", status: "Dashboard implemented", statusJa: "ダッシュボード実装済み" },
+  { name: "WebAssembly", area: "Browser-side DSP package", areaJa: "ブラウザー側DSPパッケージ", path: "packages/wasm-dsp/", status: "Reserved; no WASM binary", statusJa: "予約領域・WASMバイナリなし" },
+  { name: "JavaScript + HTML", area: "Canvas visualization runtime", areaJa: "Canvas可視化ランタイム", path: "apps/dashboard-ui/src/app/", status: "Dashboard visualization", statusJa: "画面可視化に使用" },
+  { name: "Swift", area: "Async mobile alert example", areaJa: "非同期モバイル通知の例", path: "services/mobile-alert/", status: "Client example; no push", statusJa: "クライアント例・通知送信なし" },
+  { name: "Dart + Flutter", area: "Cross-platform mobile concept", areaJa: "クロスプラットフォームアプリ案", path: "apps/cross-platform/", status: "Planned; no app scaffold", statusJa: "計画段階・未実装" },
+] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -165,6 +246,49 @@ const copy = {
       { title: "Read cited guidance", description: "The offline research guide links answers to JMA, USGS, and NIED references. No alert or actuator path is connected." },
     ],
     howFootnote: "Catalog events and synthetic training visuals are separate data paths.",
+    clockTitle: "LIVE CLOCKS",
+    japanTime: "JAPAN STANDARD TIME",
+    utcTime: "COORDINATED UNIVERSAL TIME",
+    stacksEyebrow: "ENGINEERING MAP / 03",
+    stacksTitle: "Polyglot architecture cards",
+    stacksDescription:
+      "See the intended responsibility and the actual scaffold status for every language stack. A design concept is not presented as a completed service.",
+    stackStatus: "CURRENT SCAFFOLD",
+    stackCount: "16 LANGUAGE STACKS",
+    rcppNote:
+      "R++ / Rcpp was part of the original DSP integration concept; no Rcpp bridge is implemented in this repository.",
+    locationsEyebrow: "JAPAN INDEX / 04",
+    locationsTitle: "Explore all 47 prefectures",
+    locationsDescription:
+      "Search the prefectures and their capital-city reference coordinates. Markers are geographic references only—not seismic stations, coverage, or risk indicators.",
+    searchPrefectures: "Search prefecture or capital…",
+    allRegions: "All regions",
+    prefectureCount: "prefectures",
+    capitalLabel: "CAPITAL REFERENCE",
+    coordinateNote: "Approximate city-center coordinates · reference only",
+    noPrefectures: "No prefectures match this search.",
+    deskEyebrow: "SOURCE DESK / 05",
+    deskTitle: "Official information & event updates",
+    deskDescription:
+      "Latest Japan-region catalog activity from USGS, alongside direct links to primary public agencies. This page does not aggregate JMA warning bulletins or breaking-news reporting.",
+    latestCatalog: "LATEST CATALOG EVENT",
+    noLatestCatalog: "No Japan-region events are currently listed in the past-hour catalog window.",
+    officialLink: "Open official source",
+    sourcesOnly: "PRIMARY SOURCES · NO UNVERIFIED HEADLINES",
+    demoClipEyebrow: "INTERACTIVE DEMO / RENDERED LIVE",
+    demoClipTitle: "A guided system walkthrough",
+    demoClipDescription:
+      "Play a short, generated visual tour of the catalog, illustrative signal, Japan view, and review boundary. This is a browser animation—not recorded field footage.",
+    demoClipPlay: "Play walkthrough",
+    demoClipPause: "Pause walkthrough",
+    demoClipReset: "Restart walkthrough",
+    demoClipStep: "SCENE",
+    demoClipSteps: [
+      { title: "Catalog first", description: "A server route validates a public past-hour event feed and filters the Japan-region view." },
+      { title: "Signals are illustrative", description: "Waveforms and service paths are generated locally; no sensor stream is connected." },
+      { title: "Japan in context", description: "The globe and prefecture index provide geographic orientation, not station coverage." },
+      { title: "Review, never dispatch", description: "Citations and limitations stay visible. No public warning or infrastructure action is available." },
+    ],
     statusTitle: "Connection status",
     status: "No field stations or model endpoints connected",
     reviewTitle: "Operational boundary",
@@ -172,7 +296,7 @@ const copy = {
       "Model estimates require independent validation and authorized human review. This interface cannot issue evacuation guidance or operate physical infrastructure.",
     online: "DEMO MODE",
     dimensions: ["Integrity", "Coverage", "Latency", "Quality", "Resilience"],
-    nav: ["Overview", "Event catalog", "About", "How it works", "Research guide", "Sources"],
+    nav: ["Overview", "Event catalog", "About", "How it works", "Stacks", "Prefectures", "Updates", "Research guide", "Sources"],
     catalogEyebrow: "EXTERNAL CATALOG • OBSERVED EVENTS",
     catalogTitle: "Recent events near Japan",
     catalogDescription:
@@ -383,6 +507,49 @@ const copy = {
       { title: "出典付き資料を読む", description: "オフラインのリサーチガイドがJMA、USGS、NIEDの資料を案内します。警報やアクチュエーターへの経路はありません。" },
     ],
     howFootnote: "カタログイベントと合成訓練ビジュアルは別々のデータ経路です。",
+    clockTitle: "現在時刻",
+    japanTime: "日本標準時",
+    utcTime: "協定世界時",
+    stacksEyebrow: "エンジニアリング構成 / 03",
+    stacksTitle: "多言語アーキテクチャカード",
+    stacksDescription:
+      "各言語の想定責務と、リポジトリ内の実際の構成状況を表示します。設計案を完成済みサービスとして扱いません。",
+    stackStatus: "現在の構成",
+    stackCount: "16 言語スタック",
+    rcppNote:
+      "R++ / Rcppは当初のDSP連携案です。このリポジトリにRcppブリッジは実装されていません。",
+    locationsEyebrow: "日本地域インデックス / 04",
+    locationsTitle: "47都道府県を表示",
+    locationsDescription:
+      "都道府県名と県庁所在地の参考座標を検索できます。位置は地理的な参考情報であり、地震観測点・観測範囲・リスクを示しません。",
+    searchPrefectures: "都道府県・所在地を検索…",
+    allRegions: "すべての地方",
+    prefectureCount: "都道府県",
+    capitalLabel: "県庁所在地の参考情報",
+    coordinateNote: "市街地のおおよその座標 · 参考情報",
+    noPrefectures: "該当する都道府県がありません。",
+    deskEyebrow: "情報ソース / 05",
+    deskTitle: "公式情報・イベント更新",
+    deskDescription:
+      "USGS日本周辺カタログの最新情報と、公的機関の一次リンクを掲載します。気象庁の警報速報や速報ニュースをこのページで集約するものではありません。",
+    latestCatalog: "最新カタログイベント",
+    noLatestCatalog: "過去1時間のカタログに日本周辺のイベントはありません。",
+    officialLink: "公式情報を開く",
+    sourcesOnly: "一次情報 · 未確認見出しなし",
+    demoClipEyebrow: "インタラクティブデモ / ライブ描画",
+    demoClipTitle: "システムのガイド付きツアー",
+    demoClipDescription:
+      "カタログ、説明用信号、日本周辺の地図、レビュー境界を生成アニメーションで紹介します。録画された現地映像ではありません。",
+    demoClipPlay: "ツアーを再生",
+    demoClipPause: "ツアーを一時停止",
+    demoClipReset: "ツアーを最初から再生",
+    demoClipStep: "シーン",
+    demoClipSteps: [
+      { title: "カタログから開始", description: "サーバールートが公開された過去1時間のイベントフィードを検証し、日本周辺を抽出します。" },
+      { title: "信号は説明用", description: "波形とサービス経路はローカルで生成され、センサーストリームには接続されていません。" },
+      { title: "日本の位置を確認", description: "地球儀と都道府県一覧は地理的な参考用で、観測網の範囲ではありません。" },
+      { title: "レビューのみ、配信なし", description: "出典と制約を表示します。一般向け警報やインフラ操作機能はありません。" },
+    ],
     statusTitle: "接続状態",
     status: "観測所およびモデルの接続はありません",
     reviewTitle: "運用上の制限",
@@ -390,7 +557,7 @@ const copy = {
       "モデル推定値には独立した検証と権限を持つ担当者の確認が必要です。避難案内や物理インフラの操作は行いません。",
     online: "デモモード",
     dimensions: ["完全性", "観測範囲", "遅延", "品質", "耐障害性"],
-    nav: ["概要", "地震カタログ", "プロジェクト概要", "仕組み", "調査ガイド", "参考資料"],
+    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "技術構成", "都道府県", "情報ソース", "調査ガイド", "参考資料"],
     catalogEyebrow: "外部カタログ • 観測済みイベント",
     catalogTitle: "日本周辺の最近の地震",
     catalogDescription:
@@ -633,6 +800,45 @@ function drawAmbient(context: CanvasRenderingContext2D, width: number, height: n
       : `rgba(105, 224, 195, ${0.14 + point.depth * 0.38})`;
     context.fill();
   });
+  context.restore();
+}
+
+function drawWalkthrough(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  time: number,
+  step: number,
+  simulationLabel: string,
+) {
+  const scene = step % 4;
+  if (scene === 0) drawTopology(context, width, height, time, simulationLabel);
+  else if (scene === 1) drawWave(context, width, height, time, 15, "baseline");
+  else if (scene === 2) drawGlobe(context, width, height, time);
+  else drawDevice(context, width, height, time);
+
+  const wash = context.createLinearGradient(0, 0, 0, height);
+  wash.addColorStop(0, "rgba(4, 13, 23, .42)");
+  wash.addColorStop(0.35, "rgba(4, 13, 23, 0)");
+  wash.addColorStop(1, "rgba(4, 13, 23, .25)");
+  context.fillStyle = wash;
+  context.fillRect(0, 0, width, height);
+
+  context.save();
+  context.strokeStyle = "rgba(105, 224, 195, .1)";
+  context.setLineDash([3, 7]);
+  context.beginPath();
+  context.moveTo(18, height - 23);
+  context.lineTo(width - 18, height - 23);
+  context.stroke();
+  context.setLineDash([]);
+  const progress = (time % 5000) / 5000;
+  context.beginPath();
+  context.arc(18 + progress * (width - 36), height - 23, 3, 0, Math.PI * 2);
+  context.fillStyle = "#69e0c3";
+  context.shadowColor = "#69e0c3";
+  context.shadowBlur = 12;
+  context.fill();
   context.restore();
 }
 
@@ -993,19 +1199,21 @@ function AnimatedCanvas({
   label,
   elapsed = 0,
   profile = "baseline",
+  step = 0,
 }: {
   kind: VisualKind;
   locale: Locale;
   label: string;
   elapsed?: number;
   profile?: DrillProfile;
+  step?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const simulationRef = useRef({ elapsed, profile });
+  const simulationRef = useRef({ elapsed, profile, step });
 
   useEffect(() => {
-    simulationRef.current = { elapsed, profile };
-  }, [elapsed, profile]);
+    simulationRef.current = { elapsed, profile, step };
+  }, [elapsed, profile, step]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1026,6 +1234,9 @@ function AnimatedCanvas({
       context.setTransform(scale, 0, 0, scale, 0, 0);
       context.clearRect(0, 0, width, height);
       if (kind === "ambient") drawAmbient(context, width, height, time);
+      if (kind === "walkthrough") {
+        drawWalkthrough(context, width, height, time, simulationRef.current.step, copy[locale].simulated);
+      }
       if (kind === "topology") drawTopology(context, width, height, time, copy[locale].simulated);
       if (kind === "wave") {
         drawWave(context, width, height, time, simulationRef.current.elapsed, simulationRef.current.profile);
@@ -1141,6 +1352,7 @@ function PropagationMap({
 
 export default function Dashboard() {
   const [locale, setLocale] = useState<Locale>("en-US");
+  const [liveTime, setLiveTime] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [previewChannel, setPreviewChannel] = useState<PreviewChannel>("mobile");
@@ -1155,11 +1367,36 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantAnswer, setAssistantAnswer] = useState<ResearchQuestion | "fallback" | null>(null);
+  const [prefectureQuery, setPrefectureQuery] = useState("");
+  const [regionFilter, setRegionFilter] = useState<JapanRegion | "all">("all");
+  const [selectedPrefectureId, setSelectedPrefectureId] = useState<string>("tokyo");
+  const [tourStep, setTourStep] = useState(0);
+  const [tourPlaying, setTourPlaying] = useState(false);
   const text = copy[locale];
+  const filteredPrefectures = japanPrefectures.filter((prefecture) => {
+    const query = prefectureQuery.trim().toLocaleLowerCase();
+    const matchesRegion = regionFilter === "all" || prefecture.region === regionFilter;
+    const matchesQuery =
+      query.length === 0 ||
+      prefecture.en.toLocaleLowerCase().includes(query) ||
+      prefecture.ja.includes(prefectureQuery.trim()) ||
+      prefecture.capitalEn.toLocaleLowerCase().includes(query) ||
+      prefecture.capitalJa.includes(prefectureQuery.trim());
+    return matchesRegion && matchesQuery;
+  });
+  const selectedPrefecture =
+    japanPrefectures.find((prefecture) => prefecture.id === selectedPrefectureId) ?? japanPrefectures[12];
   const phaseIndex =
     elapsed === 0 ? 0 : elapsed < 5 ? 1 : elapsed < 14 ? 2 : elapsed < 30 ? 3 : 4;
   const progress = elapsed / 38;
   const remaining = Math.max(0, 38 - elapsed);
+
+  useEffect(() => {
+    const updateTime = () => setLiveTime(Date.now());
+    updateTime();
+    const timer = window.setInterval(updateTime, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!running) return;
@@ -1220,6 +1457,14 @@ export default function Dashboard() {
   }, [elapsed]);
 
   useEffect(() => {
+    if (!tourPlaying || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => {
+      setTourStep((current) => (current + 1) % text.demoClipSteps.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [text.demoClipSteps.length, tourPlaying]);
+
+  useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
@@ -1260,6 +1505,16 @@ export default function Dashboard() {
 
   const formatFeedTime = (timestamp: number | null) =>
     timestamp === null ? "—" : `${formatEventTime(timestamp)} JST`;
+  const formatClock = (timeZone: string) =>
+    liveTime === null
+      ? "—:—:—"
+      : new Intl.DateTimeFormat(locale, {
+          timeZone,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(liveTime);
 
   return (
     <main className="shell">
@@ -1271,7 +1526,7 @@ export default function Dashboard() {
         </div>
         <nav className="section-nav" aria-label={text.navLabel}>
           {text.nav.map((item, index) => (
-            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#assistant", "#research"][index]}>{item}</a>
+            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#architecture", "#locations", "#updates", "#assistant", "#research"][index]}>{item}</a>
           ))}
         </nav>
         <div className="header-controls">
@@ -1301,6 +1556,13 @@ export default function Dashboard() {
             <span>{text.globeStatus}</span>
           </div>
         </div>
+      </section>
+
+      <section className="time-strip" aria-label={text.clockTitle}>
+        <div className="time-strip-label"><span className="status-dot" />{text.clockTitle}</div>
+        <div className="time-value"><small>{text.japanTime}</small><strong>{formatClock("Asia/Tokyo")}<i>JST</i></strong></div>
+        <div className="time-divider" />
+        <div className="time-value"><small>{text.utcTime}</small><strong>{formatClock("UTC")}<i>UTC</i></strong></div>
       </section>
 
       <section className="about-section panel" id="about">
@@ -1383,6 +1645,62 @@ export default function Dashboard() {
           </div>
           <span className="how-index">PIPELINE / 04</span>
         </div>
+        <div className="demo-player">
+          <div className="demo-screen">
+            <AnimatedCanvas
+              kind="walkthrough"
+              locale={locale}
+              label={text.demoClipTitle}
+              step={tourStep}
+            />
+            <div className="demo-screen-overlay">
+              <span className="demo-record-label"><i />{text.demoClipEyebrow}</span>
+              <span className="demo-scene-counter">{text.demoClipStep} 0{tourStep + 1} / 04</span>
+            </div>
+            <div className="demo-screen-caption">
+              <span>HYPERION CORE <i>·</i> {text.simulated}</span>
+              <strong>{text.demoClipSteps[tourStep].title}</strong>
+            </div>
+          </div>
+          <div className="demo-player-info">
+            <p className="eyebrow">{text.demoClipEyebrow}</p>
+            <h3>{text.demoClipSteps[tourStep].title}</h3>
+            <p>{text.demoClipSteps[tourStep].description}</p>
+            <div className="demo-progress" aria-label={`${text.demoClipStep} ${tourStep + 1} of 4`}>
+              {text.demoClipSteps.map((step, index) => (
+                <button
+                  type="button"
+                  key={step.title}
+                  className={index === tourStep ? "demo-progress-step is-current" : "demo-progress-step"}
+                  aria-label={`${text.demoClipStep} ${index + 1}: ${step.title}`}
+                  aria-pressed={index === tourStep}
+                  onClick={() => setTourStep(index)}
+                />
+              ))}
+            </div>
+            <div className="demo-player-controls">
+              <button
+                type="button"
+                className="primary-button"
+                aria-label={tourPlaying ? text.demoClipPause : text.demoClipPlay}
+                onClick={() => setTourPlaying((playing) => !playing)}
+              >
+                <span aria-hidden="true">{tourPlaying ? "Ⅱ" : "▶"}</span>
+                {tourPlaying ? text.demoClipPause : text.demoClipPlay}
+              </button>
+              <button
+                type="button"
+                className="reset-button"
+                onClick={() => {
+                  setTourPlaying(false);
+                  setTourStep(0);
+                }}
+              >
+                {text.demoClipReset}
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="how-grid">
           {text.howSteps.map((step, index) => (
             <article className="how-card" key={step.title}>
@@ -1394,6 +1712,119 @@ export default function Dashboard() {
           ))}
         </div>
         <p className="how-footnote"><span>i</span>{text.howFootnote}</p>
+      </section>
+
+      <section className="stack-section panel" id="architecture">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">{text.stacksEyebrow}</p>
+            <h2>{text.stacksTitle}</h2>
+            <p className="scenario-description">{text.stacksDescription}</p>
+          </div>
+          <span className="section-counter">{text.stackCount}</span>
+        </div>
+        <div className="stack-grid">
+          {languageStacks.map((stack, index) => (
+            <article className="stack-card" key={stack.name} style={{ "--card-index": index } as React.CSSProperties}>
+              <div className="stack-card-top">
+                <span className="stack-index">0{index + 1}</span>
+                <span className={`stack-status ${stack.status.includes("Planned") || stack.status.includes("Reserved") ? "stack-planned" : "stack-scaffolded"}`}>
+                  <i />{locale === "ja-JP" ? stack.statusJa : stack.status}
+                </span>
+              </div>
+              <h3>{stack.name}</h3>
+              <p>{locale === "ja-JP" ? stack.areaJa : stack.area}</p>
+              <code>{stack.path}</code>
+            </article>
+          ))}
+        </div>
+        <p className="stack-note"><span>i</span>{text.rcppNote}</p>
+      </section>
+
+      <section className="location-section panel" id="locations">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">{text.locationsEyebrow}</p>
+            <h2>{text.locationsTitle}</h2>
+            <p className="scenario-description">{text.locationsDescription}</p>
+          </div>
+          <span className="section-counter">47 / 47</span>
+        </div>
+        <div className="location-tools">
+          <label className="prefecture-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              value={prefectureQuery}
+              placeholder={text.searchPrefectures}
+              aria-label={text.searchPrefectures}
+              onChange={(event) => setPrefectureQuery(event.target.value)}
+            />
+          </label>
+          <span className="location-result-count">{filteredPrefectures.length} / 47 {text.prefectureCount}</span>
+        </div>
+        <div className="region-filters" role="group" aria-label={text.allRegions}>
+          <button type="button" className={regionFilter === "all" ? "region-filter is-active" : "region-filter"} aria-pressed={regionFilter === "all"} onClick={() => setRegionFilter("all")}>{text.allRegions}</button>
+          {japanRegions.map((region) => (
+            <button type="button" key={region.en} className={regionFilter === region.en ? "region-filter is-active" : "region-filter"} aria-pressed={regionFilter === region.en} onClick={() => setRegionFilter(region.en)}>
+              {locale === "ja-JP" ? region.ja : region.en}
+            </button>
+          ))}
+        </div>
+        <div className="prefecture-grid" aria-live="polite">
+          {filteredPrefectures.length > 0 ? filteredPrefectures.map((prefecture, index) => (
+            <button
+              type="button"
+              className={selectedPrefectureId === prefecture.id ? "prefecture-card is-selected" : "prefecture-card"}
+              key={prefecture.id}
+              aria-pressed={selectedPrefectureId === prefecture.id}
+              style={{ "--card-index": index } as React.CSSProperties}
+              onClick={() => setSelectedPrefectureId(prefecture.id)}
+            >
+              <span className="prefecture-region">{locale === "ja-JP" ? japanRegions.find((region) => region.en === prefecture.region)?.ja : prefecture.region}</span>
+              <strong>{locale === "ja-JP" ? prefecture.ja : prefecture.en}</strong>
+              <span className="prefecture-capital">{text.capitalLabel} · {locale === "ja-JP" ? prefecture.capitalJa : prefecture.capitalEn}</span>
+              <code>{prefecture.lat.toFixed(4)}°N&nbsp; {prefecture.lon.toFixed(4)}°E</code>
+            </button>
+          )) : <p className="prefecture-empty">{text.noPrefectures}</p>}
+        </div>
+        <p className="stack-note"><span>i</span>{text.coordinateNote} · {locale === "ja-JP" ? selectedPrefecture.ja : selectedPrefecture.en} / {locale === "ja-JP" ? selectedPrefecture.capitalJa : selectedPrefecture.capitalEn}: {selectedPrefecture.lat.toFixed(4)}°N, {selectedPrefecture.lon.toFixed(4)}°E</p>
+      </section>
+
+      <section className="updates-section panel" id="updates">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">{text.deskEyebrow}</p>
+            <h2>{text.deskTitle}</h2>
+            <p className="scenario-description">{text.deskDescription}</p>
+          </div>
+          <span className="updates-trust-tag"><i />{text.sourcesOnly}</span>
+        </div>
+        <div className="updates-grid">
+          <article className="latest-event-card">
+            <div className="updates-card-heading"><span>{text.latestCatalog}</span><small>{catalog.feedGeneratedAt === null ? "—" : formatFeedTime(catalog.feedGeneratedAt)}</small></div>
+            {catalog.events.length > 0 ? (
+              <div className="latest-event-body">
+                <span className="event-magnitude"><small>{text.magnitude}</small><strong>{catalog.events[0].magnitude.toFixed(1)}</strong></span>
+                <div><h3>{catalog.events[0].place}</h3><p>{formatEventTime(catalog.events[0].time)} JST · {text.depth} {catalog.events[0].depthKm.toFixed(0)} km</p></div>
+                <a href={catalog.events[0].url} target="_blank" rel="noreferrer">{text.sourceOpen} ↗</a>
+              </div>
+            ) : (
+              <p className="no-update-copy">{catalog.status === "error" ? text.catalogError : text.noLatestCatalog}</p>
+            )}
+          </article>
+          <div className="agency-links">
+            <a href="https://www.jma.go.jp/jma/en/Activities/eew1.html" target="_blank" rel="noreferrer">
+              <span><small>JMA / OFFICIAL GUIDANCE</small><strong>Earthquake Early Warning</strong></span><i>↗</i>
+            </a>
+            <a href="https://www.jma.go.jp/bosai/map.html#contents=earthquake_map" target="_blank" rel="noreferrer">
+              <span><small>JMA / EARTHQUAKE INFORMATION</small><strong>Japan Meteorological Agency map</strong></span><i>↗</i>
+            </a>
+            <a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson" target="_blank" rel="noreferrer">
+              <span><small>USGS / PAST-HOUR CATALOG</small><strong>Original GeoJSON feed</strong></span><i>↗</i>
+            </a>
+          </div>
+        </div>
       </section>
 
       <section className="scenario panel">

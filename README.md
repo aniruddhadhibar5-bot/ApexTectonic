@@ -15,6 +15,11 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **Japan event catalog:** a server-side proxy retrieves the USGS past-hour GeoJSON feed, filters events to a broad Japan-region bounding box, and presents event time, magnitude, depth, coordinates, and a source link. Refresh and unavailable-feed states are shown explicitly.
 - **Animated interface:** a procedural network-field backdrop, a Japan-centered orbiting globe, service topology, waveform, radar-style visualization, and a rotating isometric sensor concept.
 - **About and system tour:** bilingual project context plus a four-step walkthrough separating the USGS catalog from generated training visuals and cited research.
+- **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, topology, and sensor graphics. It is not a recorded field video.
+- **Japan time desk:** live browser-clock views for Japan Standard Time (JST) and UTC.
+- **47-prefecture index:** searchable and region-filterable prefecture/capital directory with approximate city-center reference coordinates. These coordinates are not sensor locations.
+- **Source and update desk:** the latest event in the USGS Japan-region catalog, when present, plus direct links to JMA and USGS primary sources. It does not invent headlines or claim to aggregate official warning news.
+- **16 language-stack cards:** an honest, per-stack view of the intended system role and current repository status.
 - **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
 - **Synthetic Nankai training exercise:** replay, pause, reset, and scrub a fictional signal-review sequence; select generated input-noise and station-dropout profiles.
 - **Bilingual research guide:** switch the interface between English and Japanese, browse cited JMA, USGS, and NIED Hi-net documentation, and ask supported questions of an offline, curated answer guide.
@@ -68,6 +73,41 @@ npm run start
 | `Makefile` | Available polyglot test commands | Requires the corresponding language toolchains |
 
 This is a deliberately scoped starter, not a finished implementation of every language or service in the original concept. Hardware interfaces, production gRPC services, trained models, authentication, deployment hardening, observability, and emergency integrations are not provided.
+
+## Polyglot architecture cards
+
+These are the language stacks shown in the dashboard. “Implemented” means an example or scaffold exists; it does not mean a production-ready, connected service.
+
+| Stack | Intended role | Current repository status |
+| --- | --- | --- |
+| Rust | Edge frame parsing and authenticated telemetry | Bounded parser and authentication-tag example |
+| Zig | Low-level frame handling | Unprivileged fixed-frame decoder; no kernel bypass |
+| C++20 | Signal processing and FFT | Scalar DSP examples; no SIMD performance claim |
+| Julia | Scientific modeling | Dimensionless diffusion example; not a tectonic forecast |
+| Python | Model integration | Bounded async inference adapter; no weights or validated predictor |
+| Haskell | Review eligibility | Deterministic checks; not a formal safety proof |
+| Go | Ingestion routing | Small routing/concurrency example |
+| Elixir | Connection supervision | Planned; no service scaffold currently exists |
+| Java | Enterprise review orchestration | Review-queue stub; no physical actuators |
+| R | Regional statistics | Small statistical example; not an operational risk estimate |
+| PHP | Administration and audit | Minimal entry-point scaffold |
+| TypeScript | Mission-control web UI | Bilingual Next.js dashboard |
+| WebAssembly | Browser-side DSP | Reserved package; no compiled WASM binary |
+| JavaScript + HTML | Interactive visualizations | Canvas and browser UI implementation |
+| Swift | Mobile client concept | Async client example; no push delivery |
+| Dart + Flutter | Cross-platform client | Planned; no Flutter app scaffold currently exists |
+
+The original “R++” idea is treated as an Rcpp/C++ integration concept only; this repository contains no Rcpp bridge. Language assignments are architectural learning examples, not evidence that all 16 service backends are deployed.
+
+## Japan region directory
+
+The dashboard lists every prefecture and its capital-city reference coordinates, grouped into eight conventional regions: Hokkaido, Tohoku, Kanto, Chubu, Kansai, Chugoku, Shikoku, and Kyushu/Okinawa. The coordinates are approximate city-center references. They are provided for geographic orientation only and do not indicate sensor placement, seismic coverage, local hazard, or current conditions.
+
+The USGS catalog filter uses a broad rectangular geographic window, not Japanese administrative boundaries. An event’s appearance or absence in this catalog must not be interpreted as a local safety status.
+
+## Research and development
+
+See the project’s [Research & Development brief](./docs/RESEARCH_AND_DEVELOPMENT.md) for the architecture boundaries, source ledger, research questions, staged validation plan, and explicit data gaps. It is a project design note—not a peer-reviewed geophysical study or evidence of predictive performance.
 
 ## Checks
 
