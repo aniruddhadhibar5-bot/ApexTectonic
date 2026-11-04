@@ -33,9 +33,15 @@ Browser-generated exercise input ---> Canvas illustrations
                                       (separate from catalog)
 
 Curated question guide -----------> primary-source links
+
+Installed PWA shell --------------> browser cache
+Local notes ----------------------> device-local browser storage
+
+Manual offer/answer exchange -----> WebRTC local ICE candidates
+                                    (shared Wi-Fi/hotspot; text + audio)
 ```
 
-There is no JMA connection, Hi-net ingestion, gRPC runtime, sensor hardware, machine-learning inference service, alert delivery, actuator interface, or public message channel.
+There is no JMA connection, Hi-net ingestion, gRPC runtime, sensor hardware, machine-learning inference service, emergency-alert delivery, actuator interface, or public message channel. The PWA has a limited local peer-to-peer communication prototype; it is not an emergency service.
 
 ## 3. Current language-stack inventory
 
@@ -81,7 +87,7 @@ These points are not sensor coordinates. The prefecture directory does not model
 
 The dashboard’s “updates” area displays real catalog data returned by the existing USGS route, when available, and links to primary public sources. The catalog auto-refreshes every 60 seconds and displays the feed-generation and last-check timestamps. It does not create news headlines, scrape unverified social posts, or claim to aggregate JMA bulletins.
 
-The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Internet-free communication still requires an available path such as cellular voice/SMS, satellite, or dedicated local radio/mesh equipment; the web app implements none of these.
+The emergency contact is a device `tel:119` link referencing Tokyo Fire Department guidance. The browser cannot place a call without the device's telephone service, and the website cannot dispatch an ambulance. Separately, the installed PWA can connect two browsers with manually exchanged WebRTC offer/answer descriptions over a shared, functioning local Wi-Fi/hotspot without an internet connection. It does not create that network, use Wi-Fi Direct/Bluetooth, or provide cellular voice/SMS, satellite, radio/mesh, emergency dispatch, identity verification, or guaranteed delivery. Local notes use unencrypted browser storage. Pairing codes must be shared privately; network/router policy and browser candidate handling may prevent a connection.
 
 ## 6. Research questions and non-claims
 

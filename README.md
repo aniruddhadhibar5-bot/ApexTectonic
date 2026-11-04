@@ -18,7 +18,9 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, topology, and sensor graphics. It is not a recorded field video.
 - **Japan time desk:** live browser-clock views for Japan Standard Time (JST) and UTC.
 - **47-prefecture index:** searchable and region-filterable prefecture/capital directory with approximate city-center reference coordinates. These coordinates are not sensor locations.
-- **Emergency readiness panel:** links to Tokyo Fire Department 119 guidance and the device phone handler, while stating that predictions, sensor telemetry, alert delivery, and offline calling/messaging are not connected.
+- **Emergency readiness panel:** links to Tokyo Fire Department 119 guidance and the device phone handler, and states that predictions, sensor telemetry, and emergency-alert delivery are not connected.
+- **Installable offline PWA:** caches the app shell and static assets, and stores local notes in browser storage.
+- **Local peer communication:** copy/paste WebRTC pairing codes connect two browsers on the same local Wi-Fi/hotspot without cloud signaling. Paired peers can exchange text and use browser audio calls while their local network remains available.
 - **Source and update desk:** the latest event in the USGS Japan-region catalog, when present, plus direct links to JMA and USGS primary sources. It does not invent headlines or claim to aggregate official warning news.
 - **README language-stack inventory:** all 16 language stacks, their intended roles, and honest implementation status are documented in the architecture table below; the dashboard does not render a language-card section.
 - **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
@@ -45,6 +47,17 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The Japan-region catalog is fetched through the Next.js server route at `/api/japan-catalog`; the route contacts the USGS past-hour feed. An internet connection is needed for catalog data. If the external feed is unavailable, the dashboard shows an error rather than substituting synthetic events.
+
+## Install and use the offline communication prototype
+
+1. Open the production deployment over HTTPS while online, then install it from the browser prompt. On iOS/iPadOS, use **Share → Add to Home Screen**. Visit the app once after installation so the service worker caches the shell and static assets.
+2. With the internet unavailable, put both devices on the same functioning Wi-Fi or personal hotspot. Each device must have opened the app online and cached it first.
+3. Device A selects **Create invite** and shares the generated code with Device B through a private, out-of-band method. Device B pastes it and selects **Accept invite · create response**. Device A pastes the response and selects **Apply peer response**.
+4. Once connected, messages travel directly over a WebRTC data channel. Unpaired notes remain local to the device. Both peers select **Start voice call** and grant microphone access to send two-way audio.
+
+This prototype uses local ICE candidates only; it has no STUN/TURN server, account, cloud signaling, identity verification, or relay. Pairing may fail if the Wi-Fi network blocks peer-to-peer traffic, the router isolates clients, or the browser cannot resolve local candidates. Both devices need a secure browser context (HTTPS; localhost is suitable for development). Sharing a pairing code grants the recipient a chance to join that room—share it only with the intended peer. Local notes are stored unencrypted in browser storage; do not use them for secrets, and clear history on shared devices.
+
+The PWA cannot create Wi-Fi, use Wi-Fi Direct or Bluetooth for calling, or bypass a loss of telephone service. A cellular call to 119 still requires an available telephone network. This prototype is not an emergency dispatch, guaranteed communications, or life-safety service; test it only with non-emergency messages.
 
 ### Production build
 

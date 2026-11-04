@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import OfflineComms from "./offline-comms";
 
 type Locale = "en-US" | "ja-JP";
 type VisualKind = "topology" | "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
@@ -269,7 +270,7 @@ const copy = {
       "Model estimates require independent validation and authorized human review. This interface cannot issue evacuation guidance or operate physical infrastructure.",
     online: "DEMO MODE",
     dimensions: ["Integrity", "Coverage", "Latency", "Quality", "Resilience"],
-    nav: ["Overview", "Event catalog", "About", "How it works", "Prefectures", "Updates", "Safety & comms", "Research guide", "Sources"],
+    nav: ["Overview", "Event catalog", "About", "How it works", "Prefectures", "Updates", "Offline app", "Research guide", "Sources"],
     catalogEyebrow: "EXTERNAL CATALOG • OBSERVED EVENTS",
     catalogTitle: "Recent events near Japan",
     catalogDescription:
@@ -312,7 +313,7 @@ const copy = {
     statusNotificationsValue: "Not connected · no alerts sent",
     offlineCommsTitle: "Communication when internet is down",
     offlineCommsDescription:
-      "This website cannot deliver offline messages or calls. Text and voice still need a working path—such as cellular voice/SMS, satellite, or dedicated local radio/mesh equipment. Agree on a meeting point and keep official contacts available offline; if anyone is in immediate danger, try 119 from any available telephone.",
+      "The 119 link opens your phone app but cannot place or dispatch an emergency call. The peer room below supports non-emergency text and voice only when both devices already share a working local Wi-Fi/hotspot; it cannot reach emergency services.",
     offlineCommsTip:
       "A browser page cannot create a radio network or bypass a loss of telephone service. Check local authority guidance and your device/provider emergency-call capabilities.",
     assistantEyebrow: "AI ASSISTANCE • CURATED RESEARCH MODE",
@@ -546,7 +547,7 @@ const copy = {
       "モデル推定値には独立した検証と権限を持つ担当者の確認が必要です。避難案内や物理インフラの操作は行いません。",
     online: "デモモード",
     dimensions: ["完全性", "観測範囲", "遅延", "品質", "耐障害性"],
-    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "都道府県", "情報ソース", "緊急時・通信", "調査ガイド", "参考資料"],
+    nav: ["概要", "地震カタログ", "プロジェクト", "仕組み", "都道府県", "情報ソース", "オフライン通信", "調査ガイド", "参考資料"],
     catalogEyebrow: "外部カタログ • 観測済みイベント",
     catalogTitle: "日本周辺の最近の地震",
     catalogDescription:
@@ -589,7 +590,7 @@ const copy = {
     statusNotificationsValue: "未接続 · 通知送信なし",
     offlineCommsTitle: "インターネットが使えない場合の通信",
     offlineCommsDescription:
-      "このウェブサイトは、通信網なしでメッセージや通話を届けることはできません。テキストや音声には、携帯電話の音声/SMS、衛星通信、専用の無線・メッシュ機器など、利用可能な通信経路が必要です。集合場所を決め、公的な連絡先をオフラインでも確認できるようにしてください。差し迫った危険がある場合は、利用可能な電話から119番を試してください。",
+      "119番リンクは電話アプリを開きますが、発信や救急車の手配はできません。下のピアルームは、両端末が動作中の同じWi-Fi/テザリングに接続している場合に限り、緊急用途ではないテキスト・音声通信を行えます。緊急機関には接続されません。",
     offlineCommsTip:
       "ブラウザーだけで無線ネットワークを作ったり、電話回線の障害を回避したりすることはできません。自治体の案内と端末・通信事業者の緊急通報機能をご確認ください。",
     assistantEyebrow: "AI支援 • 出典付きリサーチモード",
@@ -1539,7 +1540,7 @@ export default function Dashboard() {
         </div>
         <nav className="section-nav" aria-label={text.navLabel}>
           {text.nav.map((item, index) => (
-            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#locations", "#updates", "#safety", "#assistant", "#research"][index]}>{item}</a>
+            <a key={item} href={["#overview", "#catalog", "#about", "#how-it-works", "#locations", "#updates", "#offline-comms", "#assistant", "#research"][index]}>{item}</a>
           ))}
         </nav>
         <div className="header-controls">
@@ -1854,6 +1855,8 @@ export default function Dashboard() {
           </article>
         </div>
       </section>
+
+      <OfflineComms locale={locale} />
 
       <section className="scenario panel">
         <div className="scenario-heading">

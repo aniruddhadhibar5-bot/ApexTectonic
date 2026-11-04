@@ -1,0 +1,18 @@
+{
+  "name": "Hyperion Core",
+  "short_name": "Hyperion",
+  "description": "Offline-ready seismic research and local peer communication prototype.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07111b",
+  "theme_color": "#07111b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
