@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package sentinel.v1;
+
+option go_package = "github.com/sentinel-core/proto/gen/go/sentinel/v1;sentinelv1";
+option java_multiple_files = true;
+option java_package = "org.sentinel.proto.v1";
+
+import "google/protobuf/timestamp.proto";
+
+// This contract carries measurements and review candidates only. It deliberately
+// defines no actuator command or public warning RPC.
+service SensorIngest {
+  rpc Submit(stream TelemetryFrame) returns (IngestSummary);
+}
+
+service SignalProcessor {
+  rpc Process(SignalWindow) returns (ProcessedWindow);
+}
+
+service TectonicsModel {
+  rpc Analyze(ProcessedWindow) returns (ModelEstimate);
+}
+
+service Inference {
+  rpc Classify(ProcessedWindow) returns (ModelEstimate);
+}
+
+service SafetyVerifier {
+  rpc Verify(ReviewCandidate) returns (VerificationResult);
+}
+
+service HumanReviewQueue {
+  rpc Submit(ReviewCandidate) returns (ReviewReceipt);
+}
+
+service MeshRouter {
+  rpc Route(stream TelemetryFrame) returns (IngestSummary);
+}
+
+service TelemetryGateway {
+  rpc Subscribe(SubscriptionRequest) returns (stream TelemetryFrame);
+}
+
+service AuditLog {
+  rpc Append(AuditRecord) returns (AuditReceipt);
+}
+
+message TelemetryFrame {
+  string station_id = 1;
+  uint64 sequence = 2;
+  google.protobuf.Timestamp captured_at = 3;
+  double latitude_deg = 4;
+  double longitude_deg = 5;
+  string units = 6;
+  repeated float samples_xyz = 7;
+  string key_id = 8;
+  bytes authentication_tag = 9;
+}
+
+message IngestSummary {
+  uint64 accepted = 1;
+  uint64 rejected = 2;
+}
+
+message SignalWindow {
+  string event_id = 1;
+  string station_id = 2;
+  google.protobuf.Timestamp captured_at = 3;
+  uint32 sample_rate_hz = 4;
+  repeated float samples = 5;
+  string units = 6;
+}
+
+message ProcessedWindow {
+  string event_id = 1;
+  string station_id = 2;
+  google.protobuf.Timestamp captured_at = 3;
+  uint32 sample_rate_hz = 4;
+  repeated float spectral_bins = 5;
+  repeated string quality_flags = 6;
+}
+
+message ModelEstimate {
+  string event_id = 1;
+  double estimated_magnitude = 2;
+  double estimated_depth_km = 3;
+  double estimated_latitude_deg = 4;
+  double estimated_longitude_deg = 5;
+  // Model score only; it is not a calibrated probability or safety guarantee.
+  double model_score = 6;
+  repeated string station_ids = 7;
+  repeated string quality_flags = 8;
+  google.protobuf.Timestamp generated_at = 9;
+}
+
+message ReviewCandidate {
+  ModelEstimate estimate = 1;
+  uint32 independent_station_count = 2;
+  uint32 consensus_ppm = 3;
+}
+
+message VerificationResult {
+  bool eligible_for_human_review = 1;
+  repeated string checks_passed = 2;
+  repeated string reasons_denied = 3;
+}
+
+message ReviewReceipt {
+  string event_id = 1;
+  bool queued = 2;
+  string review_reference = 3;
+}
+
+message SubscriptionRequest {
+  repeated string station_ids = 1;
+}
+
+message AuditRecord {
+  string actor_id = 1;
+  string action = 2;
+  string subject_id = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}
+
+message AuditReceipt {
+  string record_id = 1;
+  bool persisted = 2;
+}

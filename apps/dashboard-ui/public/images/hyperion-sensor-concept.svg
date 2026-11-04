@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" fill="none">
+  <defs>
+    <radialGradient id="backdrop" cx="0" cy="0" r="1" gradientTransform="matrix(460 300 -460 300 480 300)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123750"/>
+      <stop offset=".62" stop-color="#0A1D2E"/>
+      <stop offset="1" stop-color="#07111C"/>
+    </radialGradient>
+    <linearGradient id="boardTop" x1="309" x2="653" y1="255" y2="453" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D536B"/>
+      <stop offset=".52" stop-color="#15384F"/>
+      <stop offset="1" stop-color="#10263B"/>
+    </linearGradient>
+    <linearGradient id="boardFront" x1="470" x2="685" y1="365" y2="494" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#153D55"/>
+      <stop offset="1" stop-color="#091A29"/>
+    </linearGradient>
+    <linearGradient id="boardSide" x1="657" x2="743" y1="346" y2="434" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#153950"/>
+      <stop offset="1" stop-color="#081725"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="432" x2="544" y1="260" y2="336" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8AE8D7"/>
+      <stop offset=".5" stop-color="#4F9AB0"/>
+      <stop offset="1" stop-color="#23485F"/>
+    </linearGradient>
+    <radialGradient id="sensorGlow" cx="0" cy="0" r="1" gradientTransform="matrix(0 60 -60 0 481 310)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#69E0C3" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#69E0C3" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" stroke="#73B5C9" stroke-opacity=".09"/>
+      <circle cx="0" cy="0" r="1.5" fill="#73B5C9" fill-opacity=".2"/>
+    </pattern>
+    <filter id="shadow" x="202" y="181" width="565" height="400" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="23"/>
+    </filter>
+    <filter id="glow" x="400" y="222" width="162" height="176" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="17"/>
+    </filter>
+  </defs>
+  <path fill="url(#backdrop)" d="M0 0h960v600H0z"/>
+  <path fill="url(#grid)" d="M0 0h960v600H0z"/>
+  <ellipse cx="489" cy="440" fill="#000" fill-opacity=".58" rx="255" ry="76" filter="url(#shadow)"/>
+  <ellipse cx="488" cy="360" stroke="#69E0C3" stroke-opacity=".18" stroke-width="1.4" rx="300" ry="94" transform="rotate(-17 488 360)"/>
+  <ellipse cx="488" cy="360" stroke="#60A5FA" stroke-opacity=".16" stroke-width="1" rx="224" ry="70" transform="rotate(13 488 360)"/>
+  <path d="M145 242h120m-120 0 25-18m-25 18 25 18M779 218h83m-83 0 18-14m-18 14 18 14" stroke="#73B5C9" stroke-opacity=".46"/>
+  <path d="M164 397h118m-118 0 18-14m-18 14 18 14M729 461h106m-106 0 18-14m-18 14 18 14" stroke="#73B5C9" stroke-opacity=".38"/>
+  <g fill="#88B0C0" font-family="Consolas,monospace" font-size="12" letter-spacing="2">
+    <text x="146" y="222">EDGE SENSOR / CONCEPT</text>
+    <text x="779" y="198">3-AXIS MEMS</text>
+    <text x="164" y="377">LOCAL PACKET SIGNING</text>
+    <text x="729" y="441">NO LIVE DEVICE</text>
+  </g>
+  <circle cx="481" cy="308" r="65" fill="#69E0C3" fill-opacity=".2" filter="url(#glow)"/>
+  <path d="m279 354 201-117 221 127-208 121-214-131Z" fill="url(#boardTop)" stroke="#78C7C4" stroke-opacity=".72" stroke-width="2"/>
+  <path d="m493 485 208-121v45L493 533v-48Z" fill="url(#boardFront)" stroke="#47798A" stroke-opacity=".72" stroke-width="1.5"/>
+  <path d="m701 364 86-50v43l-86 52v-45Z" fill="url(#boardSide)" stroke="#47798A" stroke-opacity=".68" stroke-width="1.5"/>
+  <path d="m310 353 171-99 183 105-177 102-177-108Z" stroke="#69E0C3" stroke-opacity=".28" stroke-width="1.5"/>
+  <path d="m336 354 142-82 149 85-143 83-148-86Z" stroke="#60A5FA" stroke-opacity=".32" stroke-width="1.2"/>
+  <path d="m354 354 124-72 128 74-127 74-125-76Z" stroke="#9D86FF" stroke-opacity=".32" stroke-width="1.2"/>
+  <path d="m379 353 99-58 102 59-102 59-99-60Z" stroke="#69E0C3" stroke-opacity=".32"/>
+  <g stroke="#77CFC0" stroke-opacity=".78" stroke-width="2">
+    <path d="m287 353-26 15 37 23 25-15"/>
+    <path d="m685 371 40-23 23 14-39 24"/>
+    <path d="m447 459-30 18 27 16 31-18"/>
+    <path d="m544 270 34-20 23 13-34 20"/>
+  </g>
+  <g fill="#8CEAD6">
+    <circle cx="306" cy="355" r="4"/><circle cx="678" cy="374" r="4"/>
+    <circle cx="447" cy="462" r="4"/><circle cx="547" cy="272" r="4"/>
+  </g>
+  <path d="m433 313 47-28 47 28-47 28-47-28Z" fill="#102A3C" stroke="#8CEAD6" stroke-opacity=".8" stroke-width="1.6"/>
+  <path d="m448 313 32-19 32 19-32 19-32-19Z" fill="url(#metal)" stroke="#B5FFF0" stroke-opacity=".84"/>
+  <path d="M448 313v23l32 19v-23l-32-19Z" fill="#19465C" stroke="#80DCCB" stroke-opacity=".66"/>
+  <path d="m480 332 32-19v23l-32 19v-23Z" fill="#102C42" stroke="#80DCCB" stroke-opacity=".64"/>
+  <ellipse cx="480" cy="309" fill="url(#sensorGlow)" rx="63" ry="48"/>
+  <circle cx="480" cy="310" r="8" fill="#C5FFF4"/>
+  <circle cx="480" cy="310" r="17" stroke="#69E0C3" stroke-opacity=".68"/>
+  <circle cx="480" cy="310" r="29" stroke="#69E0C3" stroke-opacity=".25" stroke-dasharray="3 7"/>
+  <path d="m393 354 26 15v20m152-23 27-16v24m-165 34-29 17v22m132-11 34 19v24" stroke="#A7DCD8" stroke-opacity=".7" stroke-width="2"/>
+  <g fill="#071521" stroke="#78C7C4" stroke-opacity=".7">
+    <rect x="387" y="366" width="25" height="17" rx="3" transform="rotate(30 387 366)"/>
+    <rect x="556" y="369" width="25" height="17" rx="3" transform="rotate(-30 556 369)"/>
+    <rect x="344" y="354" width="17" height="12" rx="2" transform="rotate(30 344 354)"/>
+    <rect x="600" y="354" width="17" height="12" rx="2" transform="rotate(-30 600 354)"/>
+  </g>
+  <g fill="#69E0C3" fill-opacity=".75">
+    <circle cx="384" cy="403" r="3"/><circle cx="575" cy="399" r="3"/>
+    <circle cx="470" cy="427" r="3"/><circle cx="521" cy="278" r="2"/>
+  </g>
+  <path d="M480 253v-52m0 0-7 12m7-12 7 12" stroke="#69E0C3" stroke-opacity=".65" stroke-width="1.5"/>
+  <circle cx="480" cy="193" r="3" fill="#69E0C3"/>
+  <g fill="#748FA1" font-family="Consolas,monospace" font-size="10" letter-spacing="1.5">
+    <text x="65" y="544">HYPERION CORE</text>
+    <text x="749" y="544">ILLUSTRATIVE RENDER · NOT A PHOTOGRAPH</text>
+  </g>
+</svg>
