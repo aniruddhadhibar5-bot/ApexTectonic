@@ -10,11 +10,14 @@
     <img alt="Prototype" src="https://img.shields.io/badge/Status-Research%20Prototype-C8814F?style=for-the-badge">
   </p>
   <p><strong>Created by Aniruddha Dhibar</strong></p>
+  <p><a href="https://hyperion-core-dashboard.onrender.com"><img alt="Live on Render" src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white"></a></p>
 </div>
 
 > **Safety notice:** This project is not connected to field sensors, JMA's Earthquake Early Warning (EEW), emergency dispatch, sirens, or infrastructure controls. It must not be used to make emergency or operational decisions. Follow official information from the Japan Meteorological Agency (JMA) and local authorities.
 
 ## Dashboard preview
+
+**Open the live dashboard:** [hyperion-core-dashboard.onrender.com](https://hyperion-core-dashboard.onrender.com)
 
 The accelerated screen capture shows the live browser-rendered dashboard and its simulated robotic assembly cycle. These visuals are demonstrations, not sensor recordings.
 
