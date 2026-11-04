@@ -62,6 +62,14 @@ All Canvas scenes and the training scenario are illustrative. Animations are not
 
 ## Run the dashboard
 
+### Deploy on Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Faniruddhadhibar5-bot%2FApexTectonic)
+
+The repository includes a [`render.yaml`](./render.yaml) Blueprint for the Next.js dashboard. Connect the GitHub repository in Render and create the Blueprint to launch the free web service. Render will build from `apps/dashboard-ui`, run the production Next.js server, and automatically deploy commits pushed to `main`. The first deployment requires signing in to Render and authorizing GitHub. The free instance may spin down while idle and take time to wake.
+
+To enable the optional Gemini Live voice feature, add `GEMINI_API_KEY` as a secret environment variable in the Render dashboard. Never commit the key. Without it, the dashboard still runs, but live voice is unavailable. The dashboard remains a research/demo interface and is not an emergency-warning service.
+
 ### Requirements
 
 - Node.js 20 or later

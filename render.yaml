@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: hyperion-core-dashboard
+    runtime: node
+    plan: free
+    rootDir: apps/dashboard-ui
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true
