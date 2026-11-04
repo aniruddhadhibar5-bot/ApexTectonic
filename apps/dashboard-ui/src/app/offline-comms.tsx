@@ -247,7 +247,7 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
   const messageListRef = useRef<HTMLDivElement>(null);
   const messagesDataRef = useRef<Message[]>([]);
 
-  const saveMessages = useCallback((next: Message[]) => {
+  const commitMessages = useCallback((next: Message[]) => {
     messagesDataRef.current = next;
     setMessages(next);
     try {
@@ -259,18 +259,18 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
     }
   }, []);
 
+  const saveMessages = commitMessages;
+
   const appendMessage = useCallback((message: Message) => {
     const next = [...messagesDataRef.current, message].slice(-200);
-    messagesDataRef.current = next;
-    setMessages(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setStorageAvailable(true);
-    } catch (storageError) {
-      console.error("Could not persist offline messages", storageError);
-      setStorageAvailable(false);
-    }
-  }, []);
+    commitMessages(next);
+  }, [commitMessages]);
+
+  const playRemoteAudio = useCallback(() => {
+    const audio = remoteAudioRef.current;
+    if (!audio) return;
+    void audio.play().catch(() => setError(text.audioNote));
+  }, [text.audioNote]);
 
   const handlePeerData = useCallback((data: unknown) => {
     if (typeof data !== "string" || data.length > MAX_WIRE_LENGTH) return;
@@ -380,10 +380,7 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
       const audio = remoteAudioRef.current;
       if (!audio) return;
       audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
-      void audio.play().catch((playError: unknown) => {
-        console.error("Remote audio autoplay was blocked", playError);
-        setError(text.audioNote);
-      });
+      playRemoteAudio();
     };
     peer.oniceconnectionstatechange = () => {
       if (peer.iceConnectionState === "failed") {
@@ -391,7 +388,7 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
         setError(text.signalError);
       }
     };
-  }, [handlePeerData, stopLocationSharing, text.audioNote, text.signalError]);
+  }, [handlePeerData, playRemoteAudio, stopLocationSharing, text.signalError]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -706,20 +703,14 @@ export default function OfflineComms({ locale }: { locale: Locale }) {
       setError(text.audioNote);
       return;
     }
-    if (remoteAudioRef.current) {
-      void remoteAudioRef.current.play().catch((playError: unknown) => {
-        console.error("Remote audio playback could not start", playError);
-      });
-    }
+    playRemoteAudio();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
       await audioSenderRef.current.replaceTrack(stream.getAudioTracks()[0] ?? null);
       setCallActive(true);
       setError("");
-      if (remoteAudioRef.current) void remoteAudioRef.current.play().catch((playError: unknown) => {
-        console.error("Remote audio playback requires a user gesture", playError);
-      });
+      playRemoteAudio();
     } catch (audioError) {
       localStreamRef.current?.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;

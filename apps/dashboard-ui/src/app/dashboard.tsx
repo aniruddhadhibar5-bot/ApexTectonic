@@ -769,15 +769,100 @@ function drawAmbient(context: CanvasRenderingContext2D, width: number, height: n
 
   context.save();
   const haze = context.createRadialGradient(centerX, horizon, 0, centerX, horizon, width * 0.72);
-  haze.addColorStop(0, "rgba(36, 124, 146, .08)");
-  haze.addColorStop(0.52, "rgba(25, 82, 119, .035)");
+  haze.addColorStop(0, "rgba(176, 100, 79, .12)");
+  haze.addColorStop(0.52, "rgba(113, 69, 88, .055)");
   haze.addColorStop(1, "rgba(7, 17, 28, 0)");
   context.fillStyle = haze;
   context.fillRect(0, 0, width, height);
 
+  const scale = Math.min(width, height);
+  const sunX = width * 0.76;
+  const sunY = height * 0.34;
+  const sunRadius = scale * 0.1;
+  const sunGlow = context.createRadialGradient(sunX, sunY, sunRadius * 0.1, sunX, sunY, sunRadius * 1.8);
+  sunGlow.addColorStop(0, "rgba(244, 154, 111, .24)");
+  sunGlow.addColorStop(0.48, "rgba(222, 111, 92, .1)");
+  sunGlow.addColorStop(1, "rgba(222, 111, 92, 0)");
+  context.fillStyle = sunGlow;
+  context.fillRect(sunX - sunRadius * 1.8, sunY - sunRadius * 1.8, sunRadius * 3.6, sunRadius * 3.6);
+  context.beginPath();
+  context.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+  context.fillStyle = "rgba(225, 133, 99, .14)";
+  context.fill();
+
+  const ridgeY = height * 0.72;
+  context.beginPath();
+  context.moveTo(0, ridgeY);
+  context.lineTo(width * 0.2, height * 0.59);
+  context.lineTo(width * 0.38, height * 0.69);
+  context.lineTo(width * 0.55, height * 0.58);
+  context.lineTo(width * 0.76, height * 0.72);
+  context.lineTo(width, height * 0.6);
+  context.lineTo(width, height);
+  context.lineTo(0, height);
+  context.closePath();
+  const distantMountain = context.createLinearGradient(0, height * 0.57, 0, height);
+  distantMountain.addColorStop(0, "rgba(126, 82, 91, .16)");
+  distantMountain.addColorStop(1, "rgba(43, 35, 48, .07)");
+  context.fillStyle = distantMountain;
+  context.fill();
+
+  const fujiX = width * 0.72;
+  const fujiPeakY = height * 0.39;
+  const fujiBaseY = height * 0.77;
+  context.beginPath();
+  context.moveTo(fujiX - width * 0.27, fujiBaseY);
+  context.lineTo(fujiX - width * 0.035, fujiPeakY + height * 0.09);
+  context.quadraticCurveTo(fujiX, fujiPeakY - height * 0.025, fujiX + width * 0.045, fujiPeakY + height * 0.085);
+  context.lineTo(fujiX + width * 0.27, fujiBaseY);
+  context.closePath();
+  const fujiFace = context.createLinearGradient(fujiX - width * 0.22, fujiPeakY, fujiX + width * 0.22, fujiBaseY);
+  fujiFace.addColorStop(0, "rgba(178, 113, 105, .24)");
+  fujiFace.addColorStop(0.48, "rgba(94, 70, 83, .18)");
+  fujiFace.addColorStop(1, "rgba(48, 42, 57, .09)");
+  context.fillStyle = fujiFace;
+  context.fill();
+  context.beginPath();
+  context.moveTo(fujiX - width * 0.055, fujiPeakY + height * 0.08);
+  context.lineTo(fujiX - width * 0.035, fujiPeakY + height * 0.09);
+  context.quadraticCurveTo(fujiX, fujiPeakY - height * 0.025, fujiX + width * 0.045, fujiPeakY + height * 0.085);
+  context.lineTo(fujiX + width * 0.075, fujiPeakY + height * 0.14);
+  context.lineTo(fujiX + width * 0.028, fujiPeakY + height * 0.115);
+  context.lineTo(fujiX, fujiPeakY + height * 0.16);
+  context.lineTo(fujiX - width * 0.015, fujiPeakY + height * 0.115);
+  context.lineTo(fujiX - width * 0.075, fujiPeakY + height * 0.15);
+  context.closePath();
+  context.fillStyle = "rgba(226, 190, 166, .22)";
+  context.fill();
+
+  const gateX = width * 0.2;
+  const gateTop = height * 0.57;
+  const gateBottom = height * 0.81;
+  const gateWidth = Math.min(width * 0.2, scale * 0.29);
+  const gateDepth = Math.max(4, scale * 0.009);
+  context.save();
+  context.lineJoin = "round";
+  context.shadowColor = "rgba(222, 119, 88, .16)";
+  context.shadowBlur = scale * 0.025;
+  context.fillStyle = "rgba(170, 81, 69, .27)";
+  context.beginPath();
+  context.moveTo(gateX - gateWidth * 0.61, gateTop + gateDepth);
+  context.quadraticCurveTo(gateX, gateTop - gateDepth * 1.5, gateX + gateWidth * 0.61, gateTop + gateDepth);
+  context.lineTo(gateX + gateWidth * 0.56, gateTop + gateDepth * 2.4);
+  context.lineTo(gateX - gateWidth * 0.56, gateTop + gateDepth * 2.4);
+  context.closePath();
+  context.fill();
+  context.fillRect(gateX - gateWidth * 0.46, gateTop + gateDepth * 2.3, gateWidth * 0.92, gateDepth * 0.9);
+  context.fillRect(gateX - gateWidth * 0.37, gateTop + gateDepth * 3.5, gateWidth * 0.11, gateBottom - gateTop);
+  context.fillRect(gateX + gateWidth * 0.26, gateTop + gateDepth * 3.5, gateWidth * 0.11, gateBottom - gateTop);
+  context.fillStyle = "rgba(232, 150, 106, .18)";
+  context.fillRect(gateX - gateWidth * 0.35, gateTop + gateDepth * 3.5, gateWidth * 0.035, gateBottom - gateTop);
+  context.fillRect(gateX + gateWidth * 0.28, gateTop + gateDepth * 3.5, gateWidth * 0.035, gateBottom - gateTop);
+  context.restore();
+
   const gridFade = context.createLinearGradient(0, horizon, 0, height);
-  gridFade.addColorStop(0, "rgba(83, 180, 193, .02)");
-  gridFade.addColorStop(1, "rgba(83, 180, 193, .14)");
+  gridFade.addColorStop(0, "rgba(218, 154, 120, .018)");
+  gridFade.addColorStop(1, "rgba(203, 123, 112, .095)");
   context.strokeStyle = gridFade;
   context.lineWidth = 0.7;
   for (let column = -12; column <= 12; column += 1) {
@@ -807,7 +892,7 @@ function drawAmbient(context: CanvasRenderingContext2D, width: number, height: n
       context.beginPath();
       context.moveTo(point.x, point.y);
       context.lineTo(other.x, other.y);
-      context.strokeStyle = `rgba(93, 165, 187, ${(1 - distance / 112) * 0.12 * point.depth})`;
+      context.strokeStyle = `rgba(184, 137, 132, ${(1 - distance / 112) * 0.085 * point.depth})`;
       context.lineWidth = 0.7;
       context.stroke();
     }
@@ -818,8 +903,8 @@ function drawAmbient(context: CanvasRenderingContext2D, width: number, height: n
     context.beginPath();
     context.arc(point.x, point.y, 0.7 + point.depth * pulse, 0, Math.PI * 2);
     context.fillStyle = index % 8 === 0
-      ? `rgba(181, 140, 255, ${0.24 + point.depth * 0.36})`
-      : `rgba(105, 224, 195, ${0.14 + point.depth * 0.38})`;
+      ? `rgba(224, 151, 129, ${0.2 + point.depth * 0.26})`
+      : `rgba(210, 156, 139, ${0.1 + point.depth * 0.24})`;
     context.fill();
   });
   context.restore();
@@ -1395,7 +1480,6 @@ export default function Dashboard() {
         });
       } catch (error) {
         if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
-        console.error("Japan catalog refresh failed", error);
         setCatalog((current) => ({ ...current, status: "error" }));
       } finally {
         if (active) {

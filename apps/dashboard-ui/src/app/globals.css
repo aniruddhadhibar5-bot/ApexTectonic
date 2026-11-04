@@ -396,7 +396,7 @@ body::after { position: fixed; z-index: 0; inset: 0; background: radial-gradient
 @keyframes globe-scan { to { transform: translateY(620%); } }
 @keyframes globe-ping { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(1.8); opacity: 0; } }
 .shell { isolation: isolate; }
-.visual-ambient { position: fixed; z-index: -1; inset: 0; width: 100vw; height: 100vh; opacity: .72; pointer-events: none; }
+.visual-ambient { position: fixed; z-index: -1; inset: 0; width: 100vw; height: 100vh; opacity: .88; pointer-events: none; }
 .about-section, .how-section { position: relative; margin-top: 16px; }
 .about-section { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(20px, 4vw, 56px); padding: clamp(20px, 3vw, 34px); border-color: #244256; background: radial-gradient(ellipse at 82% 55%, rgba(35, 107, 124, .15), transparent 42%), linear-gradient(135deg, rgba(15, 33, 48, .96), rgba(7, 18, 30, .98)); }
 .about-copy h2, .how-heading h2 { max-width: 520px; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.035em; line-height: 1.2; text-wrap: balance; }
