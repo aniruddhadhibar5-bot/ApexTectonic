@@ -1,19 +1,37 @@
 # Hyperion Core
 
-### Japan-focused seismic observability, research, and training interface
-
-**Created by Aniruddha Dhibar**
-
-Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-region earthquake catalog, cited background research, and interactive synthetic signal visualizations together in one operator-oriented dashboard. It is built as an educational systems-engineering project—not as an earthquake predictor or public warning service.
-
-![Original Hyperion Core seismic sensor concept illustration; this is a design render, not a photograph of connected hardware.](apps/dashboard-ui/public/images/hyperion-sensor-concept.svg)
+<div align="center">
+  <p><strong>JAPAN-FOCUSED SEISMIC OBSERVABILITY · RESEARCH · TRAINING</strong></p>
+  <p>A bilingual systems-engineering prototype for exploring public earthquake catalogs, synthetic signal visualizations, and transparent research boundaries.</p>
+  <p>
+    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-151515?style=for-the-badge&logo=next.js&logoColor=white">
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
+    <img alt="React" src="https://img.shields.io/badge/React-149ECA?style=for-the-badge&logo=react&logoColor=white">
+    <img alt="Prototype" src="https://img.shields.io/badge/Status-Research%20Prototype-C8814F?style=for-the-badge">
+  </p>
+  <p><strong>Created by Aniruddha Dhibar</strong></p>
+</div>
 
 > **Safety notice:** This project is not connected to field sensors, JMA's Earthquake Early Warning (EEW), emergency dispatch, sirens, or infrastructure controls. It must not be used to make emergency or operational decisions. Follow official information from the Japan Meteorological Agency (JMA) and local authorities.
+
+## Dashboard preview
+
+The accelerated screen capture shows the live browser-rendered dashboard and its simulated robotic assembly cycle. These visuals are demonstrations, not sensor recordings.
+
+![Animated dashboard walkthrough showing the globe and hardware concept panels](./docs/media/dashboard-demo.gif)
+
+<p align="center">
+  <a href="./docs/media/dashboard-demo.mp4">▶ Watch or download the dashboard video (MP4)</a>
+</p>
+
+| Mission-control overview | Robotic hardware console |
+| --- | --- |
+| ![Dashboard overview with the Japan-centered animated globe](./docs/dashboard-overview.png) | ![Interactive isometric hardware assembly console with simulated telemetry](./docs/hardware-console.png) |
 
 ## What you can explore
 
 - **Japan event catalog:** a server-side proxy retrieves the USGS past-hour GeoJSON feed, filters events to a broad Japan-region bounding box, and presents event time, magnitude, depth, coordinates, and a source link. It auto-refreshes every 60 seconds and shows feed-generation and last-check times.
-- **Animated interface:** a procedural network-field backdrop, a Japan-centered orbiting globe, waveform and radar-style visualizations, and a rotating isometric sensor concept.
+- **Animated interface:** a Japan-centered globe with mapped coastlines, orbital paths, simulated network nodes and route pulses, plus a robotic edge-computing concept with a choreographed assembly/inspection cycle.
 - **About and system tour:** bilingual project context plus a four-step walkthrough separating the USGS catalog from generated training visuals and cited research.
 - **Interactive demo reel:** a play/pause scene tour rendered in the browser from the same illustrative globe, waveform, radar, and sensor graphics. It is not a recorded field video.
 - **Japan time desk:** live browser-clock views for Japan Standard Time (JST) and UTC.
@@ -22,8 +40,8 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **Installable offline PWA:** caches the app shell and static assets, and stores local notes in browser storage.
 - **Local peer communication:** copy/paste WebRTC pairing codes connect two browsers on the same local Wi-Fi/hotspot without cloud signaling. Paired peers can exchange text and use browser audio calls while their local network remains available.
 - **Source and update desk:** the latest event in the USGS Japan-region catalog, when present, plus direct links to JMA and USGS primary sources. It does not invent headlines or claim to aggregate official warning news.
-- **README language-stack inventory:** all 16 language stacks, their intended roles, and honest implementation status are documented in the architecture table below; the dashboard does not render a language-card section.
-- **Original hardware concept art:** an in-repository SVG design illustration for a hypothetical sensor module. It is an illustration, not a photograph of real hardware.
+- **README language cards:** implemented languages, planned stacks, and their actual repository status are listed below; the dashboard does not render a language-card section.
+- **Robotic hardware console:** an interactive isometric concept assembly with selectable components, play/pause, replay, assembled/exploded views, and adjustable animation speed. CPU, memory, temperature, power, and network values are labeled simulated; no physical hardware is read or controlled.
 - **Synthetic Nankai training exercise:** replay, pause, reset, and scrub a fictional signal-review sequence; select generated input-noise and station-dropout profiles.
 - **Gemini Live voice conversation:** start an opt-in English/Japanese audio conversation or send text, with live transcription and spoken responses. It uses a one-use, short-lived, configuration-constrained token; the permanent Gemini API key stays on the server. Requires your own Gemini API key and a secure context (HTTPS; localhost for development). AI responses are not official alerts, predictions, or emergency advice.
 - **Japan preparedness guidance:** an offline curated bilingual answer summarizes earthquake/tsunami basics and Japan's 119 emergency number with links to JMA and Tokyo Fire Department references. It is not dispatch or municipality-specific advice.
@@ -33,6 +51,14 @@ Hyperion Core is a bilingual English/Japanese prototype that brings a Japan-regi
 - **Polyglot engineering examples:** explore bounded examples and starter modules for sensor framing, DSP, asynchronous inference, scientific modeling, and review eligibility.
 
 All Canvas scenes and the training scenario are illustrative. Animations are not measurements, sensor-status reports, or predictions. The USGS feed contains catalog events that have already been detected and located; it is not a real-time waveform feed or an official Japanese warning channel.
+
+## AI and model cards
+
+| Model / service | Logo card | What the repository actually does |
+| --- | --- | --- |
+| **Gemini Live API** (`gemini-3.8-live` default) | <img alt="Google Gemini" src="https://img.shields.io/badge/Gemini%20Live-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white"> | Optional, user-started English/Japanese voice assistant. The model is configurable; it is not an earthquake-prediction model or official alert channel. |
+| **Logistic regression** (synthetic browser demo) | <img alt="JavaScript demo model" src="https://img.shields.io/badge/Local%20demo-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111111"> | Trained in-browser on generated toy data to demonstrate a workflow. It has no real seismic training data, pretrained weights, calibration, or predictive value. |
+| **Seismic inference model** | <img alt="Not implemented" src="https://img.shields.io/badge/Not%20implemented-5B6472?style=for-the-badge"> | No validated or pretrained earthquake model is included. The Python service is an adapter interface with no model weights. |
 
 ## Run the dashboard
 
@@ -109,28 +135,33 @@ This is a deliberately scoped starter, not a finished implementation of every la
 
 ## Polyglot architecture inventory
 
-These are the 16 language stacks in the project concept. “Implemented” means an example or scaffold exists; it does not mean a production-ready, connected service.
+The cards below distinguish languages with source code in this repository from proposed stacks. An implementation card means a bounded example or scaffold exists—not that the service is production-ready, deployed, or connected to real sensors.
 
-| Stack | Intended role | Current repository status |
-| --- | --- | --- |
-| Rust | Edge frame parsing and authenticated telemetry | Bounded parser and authentication-tag example |
-| Zig | Low-level frame handling | Unprivileged fixed-frame decoder; no kernel bypass |
-| C++20 | Signal processing and FFT | Scalar DSP examples; no SIMD performance claim |
-| Julia | Scientific modeling | Dimensionless diffusion example; not a tectonic forecast |
-| Python | Model integration | Bounded async inference adapter; no weights or validated predictor |
-| Haskell | Review eligibility | Deterministic checks; not a formal safety proof |
-| Go | Ingestion routing | Small routing/concurrency example |
-| Elixir | Connection supervision | Planned; no service scaffold currently exists |
-| Java | Enterprise review orchestration | Review-queue stub; no physical actuators |
-| R | Regional statistics | Small statistical example; not an operational risk estimate |
-| PHP | Administration and audit | Minimal entry-point scaffold |
-| TypeScript | Mission-control web UI | Bilingual Next.js dashboard |
-| WebAssembly | Browser-side DSP | Reserved package; no compiled WASM binary |
-| JavaScript + HTML | Interactive visualizations | Canvas and browser UI implementation |
-| Swift | Mobile client concept | Async client example; no push delivery |
-| Dart + Flutter | Cross-platform client | Planned; no Flutter app scaffold currently exists |
+<table>
+  <tr>
+    <td align="center" width="12.5%"><img alt="Rust" src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white"><br><sub>Edge frame parser<br>Example</sub></td>
+    <td align="center" width="12.5%"><img alt="Zig" src="https://img.shields.io/badge/Zig-F7A41D?style=for-the-badge&logo=zig&logoColor=111111"><br><sub>Bounded frame decoder<br>Example</sub></td>
+    <td align="center" width="12.5%"><img alt="C++20" src="https://img.shields.io/badge/C%2B%2B20-00599C?style=for-the-badge&logo=cplusplus&logoColor=white"><br><sub>FFT and filters<br>Scalar DSP</sub></td>
+    <td align="center" width="12.5%"><img alt="Julia" src="https://img.shields.io/badge/Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white"><br><sub>Scientific example<br>Not a forecast</sub></td>
+    <td align="center" width="12.5%"><img alt="Python" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"><br><sub>Async inference adapter<br>No weights</sub></td>
+    <td align="center" width="12.5%"><img alt="Haskell" src="https://img.shields.io/badge/Haskell-5D4F85?style=for-the-badge&logo=haskell&logoColor=white"><br><sub>Review checks<br>Not a proof</sub></td>
+    <td align="center" width="12.5%"><img alt="Go" src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white"><br><sub>Routing example<br>Not a mesh</sub></td>
+    <td align="center" width="12.5%"><img alt="CSS" src="https://img.shields.io/badge/CSS-663399?style=for-the-badge&logo=css&logoColor=white"><br><sub>Dashboard styling<br>Implemented</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img alt="Java" src="https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white"><br><sub>Review queue<br>No actuators</sub></td>
+    <td align="center"><img alt="R" src="https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white"><br><sub>Statistical example<br>Not a risk estimate</sub></td>
+    <td align="center"><img alt="PHP" src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white"><br><sub>Admin scaffold<br>Minimal</sub></td>
+    <td align="center"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"><br><sub>Next.js dashboard<br>Implemented</sub></td>
+    <td align="center"><img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111111"><br><sub>Browser interactions<br>Implemented</sub></td>
+    <td align="center"><img alt="HTML5" src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white"><br><sub>Web UI markup<br>Implemented</sub></td>
+    <td align="center"><img alt="Swift" src="https://img.shields.io/badge/Swift-F05138?style=for-the-badge&logo=swift&logoColor=white"><br><sub>Async client example<br>No push delivery</sub></td>
+  </tr>
+</table>
 
-The original “R++” idea is treated as an Rcpp/C++ integration concept only; this repository contains no Rcpp bridge. Language assignments are architectural learning examples, not evidence that all 16 service backends are deployed.
+**Planned or reserved—not counted as implemented languages:** Elixir (no service scaffold), Dart/Flutter (no app scaffold), and WebAssembly (reserved package, no compiled binary). The original “R++” idea is treated as an Rcpp/C++ integration concept only; no Rcpp bridge exists.
+
+The shared service contract is defined with Protocol Buffers in [`proto/sentinel.proto`](./proto/sentinel.proto); the schema language is an interface definition, not an additional programming-language card.
 
 ## Japan region directory
 

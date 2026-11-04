@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import OfflineComms from "./offline-comms";
 import TrainingLab from "./training-lab";
 import AiVoiceRoom from "./ai-voice-room";
+import LiveGlobe from "./live-globe";
+import HardwareConsole from "./hardware-console";
 
 type Locale = "en-US" | "ja-JP";
 type VisualKind = "wave" | "radar" | "device" | "globe" | "ambient" | "walkthrough";
@@ -209,23 +210,12 @@ const copy = {
     deviceAxes: "3-AXIS / SCHEMATIC",
     globeLabel: "Illustrative 3D globe centered on Japan",
     globeEyebrow: "PLANETARY VIEW / 01",
-    globeCaption: "JAPAN REGION · CONCEPTUAL",
-    globeStatus: "SIMULATION LAYER",
     ambientDescription: "Animated decorative network background",
     navLabel: "Dashboard sections",
     aboutEyebrow: "PROJECT PROFILE / 01",
     aboutTitle: "A clearer view of seismic information",
     aboutBody:
       "Hyperion Core brings a recent-event catalog, a fictional signal-training lab, and a curated research guide into one bilingual interface. It is designed to make the data source and the limits of each visualization visible—not to claim predictive capability.",
-    aboutImageAlt:
-      "Original concept illustration of a compact seismic sensor module, shown as a design visualization rather than a photograph of connected hardware.",
-    aboutImageCaption: "ORIGINAL HARDWARE CONCEPT · NOT A CONNECTED DEVICE",
-    hardwareListLabel: "Illustrative hardware concept components",
-    hardwareComponents: [
-      { title: "3-axis MEMS", description: "Concept sensor element · no physical sensor connected" },
-      { title: "Edge processing", description: "Illustrative local signal-quality check" },
-      { title: "Signed packet", description: "Concept data integrity · no live telemetry" },
-    ],
     aboutFacts: ["EN / 日本語", "SOURCE-LINKED", "SIMULATION CLEARLY LABELED"],
     howEyebrow: "SYSTEM TOUR / 02",
     howTitle: "How the experience works",
@@ -496,23 +486,12 @@ const copy = {
     deviceAxes: "3軸 / 模式図",
     globeLabel: "日本を中心とした説明用3D地球儀",
     globeEyebrow: "惑星ビュー / 01",
-    globeCaption: "日本周辺 · 概念表示",
-    globeStatus: "シミュレーション表示",
     ambientDescription: "背景用のネットワークアニメーション",
     navLabel: "ダッシュボードのセクション",
     aboutEyebrow: "プロジェクト概要 / 01",
     aboutTitle: "地震情報を、より明確に可視化",
     aboutBody:
       "Hyperion Coreは、最近の地震カタログ、架空の信号訓練ラボ、出典付きリサーチガイドを一つの二言語インターフェースにまとめたプロトタイプです。予測能力をうたうのではなく、データの出典と可視化の限界を明確にすることを重視しています。",
-    aboutImageAlt:
-      "小型地震センサーモジュールのオリジナル概念イラスト。実際に接続されたハードウェアの写真ではなく、設計イメージです。",
-    aboutImageCaption: "オリジナル・ハードウェア概念図 · 実機未接続",
-    hardwareListLabel: "説明用ハードウェア概念の構成要素",
-    hardwareComponents: [
-      { title: "3軸MEMS", description: "センサーの概念図 · 実機未接続" },
-      { title: "エッジ処理", description: "信号品質確認の説明用表示" },
-      { title: "署名付きパケット", description: "データ完全性の概念 · 実データなし" },
-    ],
     aboutFacts: ["英語 / 日本語", "出典リンク付き", "シミュレーション表示"],
     howEyebrow: "システムツアー / 02",
     howTitle: "この体験の仕組み",
@@ -1678,16 +1657,12 @@ export default function Dashboard() {
           <h1>{text.title}</h1>
           <p className="hero-copy">{text.description}</p>
         </div>
-        <div className="hero-globe" aria-label={text.globeLabel}>
+        <div className="hero-globe">
           <div className="hero-globe-meta">
             <span>{text.globeEyebrow}</span>
             <i><b /></i>
           </div>
-          <AnimatedCanvas kind="globe" locale={locale} label={text.globeLabel} />
-          <div className="hero-globe-footer">
-            <span>{text.globeCaption}</span>
-            <span>{text.globeStatus}</span>
-          </div>
+          <LiveGlobe locale={locale} label={text.globeLabel} />
         </div>
       </section>
 
@@ -1710,28 +1685,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="hardware-visual-group">
-          <figure className="about-visual">
-            <div className="hardware-render">
-              <Image
-                src="/images/hyperion-sensor-concept.svg"
-                alt={text.aboutImageAlt}
-                width={960}
-                height={600}
-                sizes="(max-width: 800px) 100vw, 46vw"
-                className="concept-image"
-                priority
-              />
-            </div>
-            <figcaption>{text.aboutImageCaption}</figcaption>
-          </figure>
-          <ul className="hardware-components" aria-label={text.hardwareListLabel}>
-            {text.hardwareComponents.map((component, index) => (
-              <li key={component.title}>
-                <span>0{index + 1}</span>
-                <div><strong>{component.title}</strong><small>{component.description}</small></div>
-              </li>
-            ))}
-          </ul>
+          <HardwareConsole locale={locale} />
         </div>
       </section>
 
