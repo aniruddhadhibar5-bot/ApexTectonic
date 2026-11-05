@@ -1,0 +1,5 @@
+name = "hyperion-core-secure-edge"
+main = "worker.js"
+compatibility_date = "2026-11-05"
+workers_dev = true
+preview_urls = false
